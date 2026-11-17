@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LernSpeicher – SJ 2026/27 Hr.HARBI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230064E6'/%3E%3Cpath d='M20 46V18h6v22h14v6H20z' fill='white'/%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   LernSpeicher – Modernes Layout (Orientierung: Notenwerk V26)
+   Design-Tokens, Komponenten und Abstände neu gestaltet.
+   Alle IDs/Klassen, die das Skript erwartet, sind erhalten.
+   ============================================================ */
+:root{
+  --blue:#0064E6; --blue-d:#004db3; --blue-l:#eaf2ff;
+  --ink:#0f172a; --body:#334155; --muted:#64748b; --line:#e2e8f0; --bg:#f5f7fb;
+  --good:#16a34a; --good-l:#dcfce7; --good-d:#14532d;
+  --medium:#d97706; --medium-l:#fef3c7; --medium-d:#78350f;
+  --risk:#dc2626; --risk-l:#fee2e2; --risk-d:#7f1d1d;
+  --radius:14px; --radius-lg:18px;
+  --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.07);
+  --shadow-lg:0 24px 60px rgba(0,0,0,.22);
+  --ring:0 0 0 3px rgba(0,100,230,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+  color:var(--ink); background:var(--bg);
+  background-image:radial-gradient(circle at 15% 0%,rgba(0,100,230,.07),transparent 50%);
+  background-attachment:fixed;
+  min-height:100vh; padding-top:92px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--blue);color:#fff}
+
+/* ---------- Wasserzeichen ---------- */
+#wasserzeichen{
+  position:fixed; top:8%; left:50%; transform:translateX(-50%);
+  width:min(40vw,360px); z-index:0; pointer-events:none;
+  opacity:.05; filter:blur(.3px);
+}
+#wasserzeichen svg{width:100%;height:auto;display:block}
+
+/* ---------- Topbar ---------- */
+header{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  display:flex; justify-content:space-between; align-items:center; gap:16px;
+  padding:10px 22px;
+  background:rgba(255,255,255,.86);
+  backdrop-filter:blur(14px) saturate(1.4); -webkit-backdrop-filter:blur(14px) saturate(1.4);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+#header-logo{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#eaf2ff,#fff);
+  border:1px solid var(--line); padding:3px;
+  box-shadow:var(--shadow);
+}
+#header-logo svg{width:100%;height:100%;display:block}
+#titel{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+#titel b:first-of-type{color:var(--blue)}
+#titel b:last-of-type{color:var(--medium)}
+#version-fuss{font-size:11px;color:var(--muted);margin-top:1px}
+.kopf-rechts{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+
+/* Countdown-Leiste */
+#countbar{display:none;align-items:center;gap:12px;padding:2px 0}
+#countdown{
+  font-size:26px;font-weight:800;color:var(--blue);
+  font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1;
+}
+#countdown.warn-gelb{color:#ca8a04}
+#countdown.warn-orange{color:var(--medium)}
+#countdown.warn-rot{color:var(--risk);animation:puls 1s infinite}
+@keyframes puls{50%{opacity:.4}}
+#foerder-hinweis{font-size:12px;font-weight:700;color:var(--good)}
+
+/* ---------- Layout ---------- */
+main{position:relative;z-index:1;max-width:1104px;margin:0 auto;padding:22px 20px 70px}
+
+/* Karten */
+.glass{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);padding:24px;margin-bottom:18px;
+}
+h2.card-titel{font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:14px;letter-spacing:-.01em}
+
+/* Formulare */
+label{display:block;font-size:.82rem;font-weight:700;color:var(--ink);margin:14px 0 5px;letter-spacing:.01em}
+input[type=text],input[type=password],select,textarea{
+  width:100%;padding:11px 13px;font-size:1rem;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:10px;outline:none;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+input:hover:not(:disabled),select:hover:not(:disabled){border-color:#cbd5e1}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:var(--ring)}
+input:disabled,select:disabled{background:#f1f5f9;color:var(--muted);cursor:not-allowed}
+select{cursor:pointer}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1 1 150px}
+
+/* Kurs-Farben (className wird vom Skript gesetzt) */
+.kurs-ek{border:1.5px solid rgba(217,119,6,.55)!important;background:#fffbeb!important}
+.kurs-gk{border:1.5px solid rgba(22,163,74,.55)!important;background:#f0fdf4!important}
+.kurs-v{border:1.5px solid rgba(0,100,230,.4)!important}
+
+/* ---------- Buttons ---------- */
+button{
+  font:inherit;font-size:.98rem;font-weight:700;color:#fff;
+  padding:11px 24px;border-radius:10px;border:none;cursor:pointer;
+  background:var(--blue);
+  transition:background .15s,transform .15s,box-shadow .15s;
+  margin-top:16px;
+}
+button:hover:not(:disabled){background:var(--blue-d);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,100,230,.28)}
+button:active:not(:disabled){transform:translateY(0);box-shadow:none}
+button:disabled{background:#cbd5e1;color:#f8fafc;cursor:not-allowed}
+button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button.ghost:hover:not(:disabled){background:#f8fafc;border-color:#cbd5e1;color:var(--ink);box-shadow:var(--shadow)}
+button:focus-visible{outline:3px solid rgba(0,100,230,.35);outline-offset:2px}
+
+/* ---------- Login ---------- */
+#login{max-width:744px;margin:34px auto 0;padding:30px}
+#login h2.card-titel{font-size:1.5rem}
+#login label{font-size:.85rem;color:var(--body)}
+#login label[for="pw"]{color:var(--risk)}
+#login input,#login select{font-size:1.05rem;padding:12px 14px}
+#pw{max-width:170px;border-color:rgba(220,38,38,.4)!important}
+#pw:disabled{border-color:var(--line)!important;background:#f1f5f9!important;box-shadow:none!important}
+#pw:focus{box-shadow:0 0 0 4px rgba(220,38,38,.16)!important}
+#pw-status{font-size:.82rem;color:var(--muted);margin-top:5px;min-height:1em}
+
+/* ---------- Eingabe-Aufforderung: dezenter roter Puls bis zur Eingabe ---------- */
+@keyframes inputPulseRed{0%,100%{border-color:var(--line);box-shadow:0 0 0 0 rgba(220,38,38,0)}50%{border-color:#f87171;box-shadow:0 0 0 3px rgba(220,38,38,.15)}}
+.input-attention:not(:focus){animation:inputPulseRed 2.6s ease-in-out infinite}
+.input-attention:disabled{animation:none!important}
+
+/* ---------- Auswahlliste "Schriftliche Arbeiten": Status-Anzeige ---------- */
+select option.frei{color:var(--good-d)}
+select option.soon{color:var(--medium-d)}
+select option.abgelaufen,select option:disabled{color:#94a3b8}
+#f-lzk.sel-frei{border-color:rgba(22,163,74,.55);color:var(--good-d)}
+#f-lzk.sel-soon{border-color:rgba(217,119,6,.55);color:var(--medium-d)}
+#f-lzk.sel-abgelaufen{border-color:var(--line);color:#94a3b8}
+.rahmen-gruen{border:2px solid var(--good)!important;box-shadow:0 0 0 3px rgba(22,163,74,.14)!important}
+.rahmen-rot{border:2px solid var(--risk)!important;box-shadow:0 0 0 3px rgba(220,38,38,.12)!important}
+#start-hinweis.hinweis-unten{color:var(--risk);font-weight:600}
+
+/* ---------- Testbereich ---------- */
+#test{display:none;background:transparent;border:none;box-shadow:none;padding:0;margin:0}
+#test-info{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px 18px;margin-bottom:14px;
+  font-size:1rem;line-height:1.55;color:var(--body);
+}
+#test-info b{color:var(--ink)}
+#sprachwahl{max-width:360px;margin-top:10px}
+.hinweis-schliessen{
+  background:var(--risk-l);border:1px solid #fecaca;border-radius:12px;
+  padding:11px 14px;font-size:.9rem;font-weight:600;color:var(--risk-d);margin-bottom:14px;
+}
+.hinweis-unten{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+/* Übungs-Tools (interaktive Übungen) */
+#uebungs-tools{display:none;padding:20px;margin-bottom:18px}
+.fortschritt-kopf{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;color:var(--ink);font-size:.95rem}
+#fortschritt-text{color:var(--muted);font-weight:600;font-size:.85rem}
+.fortschritt-spur{height:10px;margin-top:10px;border-radius:999px;background:#eef2f7;overflow:hidden}
+#fortschritt-fill{width:0;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),#3385f0);transition:width .25s ease-out}
+.uebungs-buttons{display:flex;flex-wrap:wrap;gap:10px}
+#btn-selbstcheck{background:var(--good)}
+#btn-selbstcheck:hover:not(:disabled){background:#15803d;box-shadow:0 6px 16px rgba(22,163,74,.28)}
+#btn-reset{margin-top:16px}
+
+/* Aufgaben-Karten */
+#aufgaben{display:flex;flex-direction:column;gap:16px}
+.aufgabe{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);padding:22px;margin:0;
+}
+.aufgabe .head{font-size:1.02rem;font-weight:800;color:var(--ink);margin-bottom:8px}
+.aufgabe .frage{line-height:1.6;color:var(--ink);margin-bottom:10px;font-size:1rem}
+.aufgabe label{margin:12px 0 5px}
+.aufgabe input,.aufgabe select{font-size:1rem}
+.uebersetzung{
+  display:block;font-size:.88rem;color:#6b7280;font-style:italic;
+  margin:2px 0 12px;line-height:1.55;
+}
+.uebersetzung b{color:var(--muted);font-style:italic}
+.uebersetzung .tr-sub{margin-top:6px;font-style:italic}
+.tr-list{margin:4px 0 0;padding-left:20px;list-style:none}
+.tr-list li{margin:2px 0}
+.tr-list li::before{content:"\2013";margin-right:8px;color:#cbd5e1}
+.opt-tr{display:block;font-size:.8rem;font-weight:400;font-style:italic;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* ---------- Lückentext: Drag & Drop ---------- */
+.chip-bank{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--blue-l);border:1px solid #dbeafe;border-radius:12px;padding:10px 12px;margin:8px 0 4px}
+.chip{display:inline-block;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.92rem;font-weight:600;color:var(--ink);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 1px 2px rgba(15,23,42,.08);transition:transform .12s,opacity .12s,border-color .12s}
+.chip:hover{border-color:var(--blue);transform:translateY(-1px)}
+.chip.used{opacity:.3;border-style:dashed;cursor:default;transform:none}
+.chip-ghost{position:fixed;left:0;top:0;transform:translate(-50%,-50%);z-index:1000;pointer-events:none;box-shadow:0 10px 24px rgba(15,23,42,.28);margin:0}
+.chip-hint{font-size:.75rem;color:var(--muted);font-style:italic;margin-left:auto}
+.slot{min-height:50px;border:2px dashed #cbd5e1;border-radius:12px;background:#fff;display:flex;align-items:center;padding:8px 14px;font-size:1rem;font-weight:600;color:var(--muted);transition:border-color .15s,background .15s}
+.slot.filled{border-style:solid;border-color:var(--blue);color:var(--ink);background:#f8fbff;cursor:pointer}
+.slot.hover{border-color:var(--blue);background:var(--blue-l)}
+@media (max-width:600px){.chip-hint{display:none}}
+.luecke-bank{
+  font-size:.9rem;font-weight:600;color:var(--blue);font-style:normal;
+  background:var(--blue-l);border:1px solid #dbeafe;border-radius:10px;
+  padding:9px 13px;margin:8px 0;line-height:1.6;
+}
+table.opts{border-collapse:collapse;margin:10px 0;min-width:300px;width:100%;max-width:560px}
+table.opts th{
+  text-align:left;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);background:#f8fafc;padding:8px 12px;border-bottom:2px solid var(--line);
+}
+table.opts td{border-bottom:1px solid var(--line);padding:9px 12px;font-size:.95rem;color:var(--ink);background:#fff}
+table.opts tr:last-child td{border-bottom:none}
+table.opts input[type=radio],table.opts input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue);cursor:pointer}
+.rf-opt,.mc-opt{display:flex;gap:8px;align-items:center;margin:6px 0;font-weight:500}
+.begruendung-wrap{margin-top:12px;padding:14px;border-radius:12px;background:#f8fafc;border:1px dashed var(--line)}
+.begruendung-wrap label{margin-top:0}
+.selbst-feedback{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:.92rem;line-height:1.55;font-weight:600}
+.selbst-feedback:empty{display:none}
+.selbst-feedback.ok{background:var(--good-l);border:1px solid #bbf7d0;color:var(--good-d)}
+.selbst-feedback.hinweis{background:var(--risk-l);border:1px solid #fecaca;color:var(--risk-d)}
+#btn-abgeben{padding:13px 34px;font-size:1.05rem}
+
+/* ---------- Ergebnis ---------- */
+#ergebnis{display:none}
+.ergebnis-sticky{
+  position:sticky;top:104px;z-index:5;
+  background:linear-gradient(135deg,var(--blue),#3385f0);
+  color:#fff;border:none;border-radius:var(--radius-lg);
+  box-shadow:0 12px 32px rgba(0,100,230,.35);
+  padding:20px 22px;margin-bottom:8px;
+}
+.ergebnis-sticky .card-titel{color:#fff;font-size:1.2rem;margin-bottom:8px}
+.ergebnis-kopf{font-size:1rem;color:rgba(255,255,255,.92);margin:3px 0}
+.ergebnis-name{color:#ffe3b3;font-weight:800}
+.vermerk-text{font-style:normal;color:rgba(255,255,255,.88);font-size:.92rem;line-height:1.55}
+.detail-head{font-size:1rem;font-weight:800;color:var(--ink);margin:26px 0 12px}
+table.auswertung{border-collapse:collapse;margin:8px 0 12px;min-width:320px;width:100%;max-width:640px}
+table.auswertung th{
+  text-align:left;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);background:#f8fafc;padding:8px 12px;border-bottom:2px solid var(--line);
+}
+table.auswertung td{border-bottom:1px solid var(--line);padding:8px 12px;background:#fff;font-size:.9rem;color:var(--body)}
+.aw-richtig{color:var(--good);font-weight:700}
+.aw-fehler{color:var(--risk);font-weight:700}
+.aw-neutral{color:var(--muted)}
+.punkte-angabe{font-size:.85rem;font-weight:800;color:var(--blue);margin-left:.5em}
+.kein-kopie{user-select:none;-webkit-user-select:none}
+svg.diagramm{max-width:460px;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px}
+.fund-block{background:var(--medium-l);border:1px solid #fde68a;border-radius:10px;padding:11px 13px;margin-top:10px;font-size:.9rem;color:var(--medium-d)}
+
+/* Ergebnis-Aufgaben: Farbränder */
+.b-dgruen{border:1.5px solid #15803d!important}
+.b-gruen{border:1.5px solid var(--good)!important}
+.b-orange{border:1.5px solid #ea580c!important}
+.b-gelb{border:1.5px solid #ca8a04!important}
+.b-rot{border:1.5px solid var(--risk)!important}
+
+/* ---------- Modal ---------- */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:90;display:none;
+  align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.modal{max-width:480px;width:100%;padding:26px}
+.modal .card-titel{font-size:1.15rem}
+#abgabe-text{color:var(--body);font-size:.95rem;line-height:1.55;margin:4px 0 6px}
+#m-trotzdem{background:var(--risk)}
+#m-trotzdem:hover:not(:disabled){background:#b91c1c;box-shadow:0 6px 16px rgba(220,38,38,.28)}
+#m-nicht{margin-top:16px}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:var(--ink);color:#fff;border-radius:999px;
+  padding:11px 22px;font-weight:600;font-size:.9rem;z-index:100;
+  display:none;opacity:0;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.3);
+  transition:opacity .25s,transform .25s;max-width:90vw;text-align:center;
+}
+#toast.show,#toast[style*="block"]{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Fehleranzeige im Kopf ---------- */
+#lock-hinweis{
+  background:var(--risk-l);border:1px solid #fecaca;color:var(--risk-d);
+  border-radius:10px;padding:9px 13px;font-size:.88rem;font-weight:600;margin-bottom:10px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:600px){
+  body{padding-top:78px}
+  #header-logo{width:38px;height:38px}
+  #titel{font-size:17px}
+  #countdown{font-size:22px}
+  .glass{padding:18px}
+  #login{margin-top:16px;padding:22px}
+  .ergebnis-sticky{top:88px;padding:16px}
+  .fortschritt-kopf{flex-direction:column;align-items:flex-start;gap:2px}
+  #btn-abgeben{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+@media print{
+  header,#wasserzeichen,#toast,.modal-bg{display:none!important}
+  body{padding-top:0;background:#fff}
+  main{max-width:100%}
+}
+
+</style>
+</head>
+<body>
+<div id="wasserzeichen" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220" role="img" aria-labelledby="t d">
+  <title id="t">HAR MINT Logo – Das Prisma</title>
+  <desc id="d">Rundes Siegel: H aus Linealen, A als Glasprisma, das Licht in ein Spektrum zerlegt, R aus Lineal und Halbbogen. Darunter der Schriftzug MINT.</desc>
+
+  <!-- Palette: Marine #1a3a6b, Rot #c62828, Blau #2e7fc2 -->
+
+  <!-- Siegel -->
+  <circle cx="110" cy="110" r="96" fill="#ffffff" stroke="#1a3a6b" stroke-width="4"/>
+
+  <!-- Koordinatenkreuz -->
+  <g stroke="#1a3a6b" stroke-width="1" opacity="0.25">
+    <line x1="30" y1="110" x2="190" y2="110"/>
+    <line x1="110" y1="30" x2="110" y2="190"/>
+  </g>
+
+  <!-- H aus Linealen -->
+  <g>
+    <rect x="40" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <rect x="70" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <rect x="40" y="93" width="43" height="12" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <!-- Skalenstriche -->
+    <g stroke="#1a3a6b" stroke-width="1" opacity="0.6">
+      <line x1="44" y1="72" x2="49" y2="72"/><line x1="44" y1="82" x2="49" y2="82"/>
+      <line x1="44" y1="112" x2="49" y2="112"/><line x1="44" y1="122" x2="49" y2="122"/>
+      <line x1="74" y1="72" x2="79" y2="72"/><line x1="74" y1="122" x2="79" y2="122"/>
+      <line x1="50" y1="97" x2="50" y2="102"/><line x1="60" y1="97" x2="60" y2="102"/>
+      <line x1="73" y1="97" x2="73" y2="102"/>
+    </g>
+  </g>
+
+  <!-- A = Prisma -->
+  <g>
+    <polygon points="140,56 100,138 180,138" fill="#ffffff" fill-opacity="0.9" stroke="#1a3a6b" stroke-width="4" stroke-linejoin="round"/>
+    <!-- einfallender Strahl -->
+    <line x1="14" y1="92" x2="118" y2="114" stroke="#1a3a6b" stroke-width="3"/>
+    <!-- austretendes Spektrum -->
+    <line x1="150" y1="126" x2="206" y2="108" stroke="#c62828" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="118" stroke="#1a3a6b" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="128" stroke="#2e7fc2" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="138" stroke="#c62828" stroke-width="3" opacity="0.55"/>
+  </g>
+
+  <!-- R -->
+  <g>
+    <rect x="184" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <path d="M 197 68 A 20 20 0 0 1 197 108" fill="none" stroke="#1a3a6b" stroke-width="6"/>
+    <line x1="195" y1="104" x2="212" y2="130" stroke="#1a3a6b" stroke-width="6" stroke-linecap="round"/>
+    <g stroke="#1a3a6b" stroke-width="1" opacity="0.6">
+      <line x1="188" y1="72" x2="193" y2="72"/><line x1="188" y1="92" x2="193" y2="92"/>
+      <line x1="188" y1="122" x2="193" y2="122"/>
+    </g>
+  </g>
+
+  <!-- MINT -->
+  <text x="110" y="188" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="6" fill="#c62828">MINT</text>
+</svg></div>
+<header>
+  <div class="brand">
+    <div id="header-logo" role="img" aria-label="Logo HAR MINT"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220" role="img" aria-labelledby="t d">
+  <title id="t">HAR MINT Logo – Das Prisma</title>
+  <desc id="d">Rundes Siegel: H aus Linealen, A als Glasprisma, das Licht in ein Spektrum zerlegt, R aus Lineal und Halbbogen. Darunter der Schriftzug MINT.</desc>
+
+  <!-- Palette: Marine #1a3a6b, Rot #c62828, Blau #2e7fc2 -->
+
+  <!-- Siegel -->
+  <circle cx="110" cy="110" r="96" fill="#ffffff" stroke="#1a3a6b" stroke-width="4"/>
+
+  <!-- Koordinatenkreuz -->
+  <g stroke="#1a3a6b" stroke-width="1" opacity="0.25">
+    <line x1="30" y1="110" x2="190" y2="110"/>
+    <line x1="110" y1="30" x2="110" y2="190"/>
+  </g>
+
+  <!-- H aus Linealen -->
+  <g>
+    <rect x="40" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <rect x="70" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <rect x="40" y="93" width="43" height="12" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <!-- Skalenstriche -->
+    <g stroke="#1a3a6b" stroke-width="1" opacity="0.6">
+      <line x1="44" y1="72" x2="49" y2="72"/><line x1="44" y1="82" x2="49" y2="82"/>
+      <line x1="44" y1="112" x2="49" y2="112"/><line x1="44" y1="122" x2="49" y2="122"/>
+      <line x1="74" y1="72" x2="79" y2="72"/><line x1="74" y1="122" x2="79" y2="122"/>
+      <line x1="50" y1="97" x2="50" y2="102"/><line x1="60" y1="97" x2="60" y2="102"/>
+      <line x1="73" y1="97" x2="73" y2="102"/>
+    </g>
+  </g>
+
+  <!-- A = Prisma -->
+  <g>
+    <polygon points="140,56 100,138 180,138" fill="#ffffff" fill-opacity="0.9" stroke="#1a3a6b" stroke-width="4" stroke-linejoin="round"/>
+    <!-- einfallender Strahl -->
+    <line x1="14" y1="92" x2="118" y2="114" stroke="#1a3a6b" stroke-width="3"/>
+    <!-- austretendes Spektrum -->
+    <line x1="150" y1="126" x2="206" y2="108" stroke="#c62828" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="118" stroke="#1a3a6b" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="128" stroke="#2e7fc2" stroke-width="3"/>
+    <line x1="150" y1="126" x2="206" y2="138" stroke="#c62828" stroke-width="3" opacity="0.55"/>
+  </g>
+
+  <!-- R -->
+  <g>
+    <rect x="184" y="62" width="13" height="76" rx="3" fill="#ffffff" stroke="#1a3a6b" stroke-width="2.5"/>
+    <path d="M 197 68 A 20 20 0 0 1 197 108" fill="none" stroke="#1a3a6b" stroke-width="6"/>
+    <line x1="195" y1="104" x2="212" y2="130" stroke="#1a3a6b" stroke-width="6" stroke-linecap="round"/>
+    <g stroke="#1a3a6b" stroke-width="1" opacity="0.6">
+      <line x1="188" y1="72" x2="193" y2="72"/><line x1="188" y1="92" x2="193" y2="92"/>
+      <line x1="188" y1="122" x2="193" y2="122"/>
+    </g>
+  </g>
+
+  <!-- MINT -->
+  <text x="110" y="188" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="6" fill="#c62828">MINT</text>
+</svg></div>
+    <div>
+      <h1 id="titel"><b>L</b>ern<b>S</b>peicher</h1>
+      <div id="version-fuss">© LernSpeicher26 · Dipl.-Ing HARBI · <span id="version-stand"></span></div>
+    </div>
+  </div>
+  <div class="kopf-rechts">
+    <div id="countbar"><span id="countdown">--:--</span><span id="foerder-hinweis"></span></div>
+  </div>
+</header>
+<main>
+<section id="login" class="glass">
+  <h2 class="card-titel">Anmeldung</h2>
+  <div id="lock-hinweis" style="display:none;"></div>
+  <label for="pw">Zugangspasswort</label>
+  <input type="text" id="pw" class="input-attention" autocomplete="off" placeholder="******">
+  <p id="pw-status"></p>
+  <div class="row" style="margin-top:6px;">
+    <div><label>Name</label><input type="text" id="f-name" disabled placeholder="—"></div>
+    <div><label>Fach</label><select id="f-fach" disabled></select></div>
+    <div><label>Klasse</label><input type="text" id="f-klasse" disabled></div>
+    <div><label>Kurs</label><input type="text" id="f-kurs" disabled></div>
+  </div>
+  <label for="f-lzk">Schriftliche Arbeiten</label>
+  <select id="f-lzk" disabled></select>
+  <button id="btn-start" disabled>START</button>
+  <p id="start-hinweis" class="hinweis-unten" style="display:none;"></p>
+</section>
+<section id="test" class="glass kein-kopie">
+  <div id="test-info"></div>
+  <div class="hinweis-schliessen">Achtung: Schließt du das Fenster oder lädst neu, wird deine Arbeit automatisch abgegeben.</div>
+  <div id="uebungs-tools" class="glass">
+    <div class="fortschritt-kopf"><span>Dein Fortschritt</span><span id="fortschritt-text">0 von 12 Aufgaben vollständig beantwortet</span></div>
+    <div class="fortschritt-spur" role="progressbar" aria-label="Bearbeitungsfortschritt" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><div id="fortschritt-fill"></div></div>
+    <div class="uebungs-buttons">
+      <button id="btn-selbstcheck" type="button">Selbstkontrolle</button>
+      <button id="btn-reset" type="button" class="ghost">Antworten zurücksetzen</button>
+    </div>
+  </div>
+  <div id="aufgaben"></div>
+  <button id="btn-abgeben">Absenden</button>
+  <p class="hinweis-unten">Hinweis: Das Schließen des Browserfensters gilt als Abgabe deiner Arbeit.</p>
+</section>
+<section id="ergebnis" class="glass"></section>
+</main>
+<div class="modal-bg" id="modal-abgabe"><div class="modal glass">
+  <h2 class="card-titel">Abgabe prüfen</h2>
+  <p id="abgabe-text"></p>
+  <button id="m-trotzdem">Trotzdem abgeben</button>
+  <button id="m-nicht" class="ghost">Doch nicht abgeben</button>
+</div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+
+const LEHRER = { pw: "161171", name: "HAR" };
+const VERSION_STAND=(()=>{const n=berlinNow();const z=v=>String(v).padStart(2,"0");return "Ver_"+z(n.getDate())+"."+z(n.getMonth()+1)+"."+String(n.getFullYear()).slice(2)+" · "+z(n.getHours())+":"+z(n.getMinutes());})();
+
+const SCHUELER = [
+
+["YQCSX2","Akil, Malak","Mathematik","5C","V"],["WYSML2","Al Beirouti, Dania","Mathematik","5C","V"],
+["6A9UW5","Al Hamad, Alind","Mathematik","5C","V"],["FDFTW2","Albanna, Aram","Mathematik","5C","V"],
+["UD61J2","Alievski, Zaklina","Mathematik","5C","V"],["C3MPEX","Azzouzi, Maryam","Mathematik","5C","V"],
+["V3P24G","Aiyobro, Elimar","Mathematik","5C","V"],["WA88TL","Benaali Boukhou, Dina","Mathematik","5C","V"],
+["BF3K48","Blum, Lio Wilhelm","Mathematik","5C","V"],["TPM3VY","Dialler, Lionel","Mathematik","5C","V"],
+["2JKRBC","Fausten, Leon","Mathematik","5C","V"],["B729GA","Grüner, Jerome Noel","Mathematik","5C","V"],
+["KJXAL3","Haj Abd, Abdalhamid","Mathematik","5C","V"],["C7Q615","Kamal, Safia","Mathematik","5C","V"],
+["9YHKN8","Kolaxizis, Noah","Mathematik","5C","V"],["2NDVY2","Lazar, Imad","Mathematik","5C","V"],
+["6HQR3W","Longo, Gabriele","Mathematik","5C","V"],["3ZAM6Z","Maieilo, Antonio","Mathematik","5C","V"],
+["BR5CFR","Marzouki, Noah","Mathematik","5C","V"],["WPXS7D","Mihajlović, Jovana","Mathematik","5C","V"],
+["ZR1H3B","Moustafa, Azize","Mathematik","5C","V"],["9TKVZ6","Muhamad, Danar","Mathematik","5C","V"],
+["BAN3A9","Saido, Mohammed","Mathematik","5C","V"],["S1FF5H","Serano Javier, Adil","Mathematik","5C","V"],
+["CFDA81","Smoqy, Khunaf","Mathematik","5C","V"],
+
+["Y1HF5F","Amuzu, Prince","Mathematik","6C","V"],["K5W7TK","Arfe, Selya","Mathematik","6C","V"],
+["81PFSX","Bernsdorf, Emily","Mathematik","6C","V"],["ZB5B39","Beskardes (Beşkardeş), Efe","Mathematik","6C","V"],
+["PT33AP","Dagtekin (Dağtekin), Ahmet","Mathematik","6C","V"],["M8Q7UL","El Arrag, Hidaya","Mathematik","6C","V"],
+["5ME265","El Yachaoui, Moussa","Mathematik","6C","V"],["26DMWW","Faizi, Fereshte","Mathematik","6C","V"],
+["6R8KYN","Galali, Bahoz","Mathematik","6C","V"],["84UAJQ","Große, Jayden","Mathematik","6C","V"],
+["56V5WR","Hafiane, Yassmine","Mathematik","6C","V"],["NSAW15","Kremsier, Philipp","Mathematik","6C","V"],
+["C1MDLS","Kusi Oppong, Jayden","Mathematik","6C","V"],["7BZALW","Labahn, Fabienne","Mathematik","6C","V"],
+["L8D375","Mehmed, Neriman","Mathematik","6C","V"],["3MQHMH","Mpanzu, Ambrósio","Mathematik","6C","V"],
+["TWQ3AU","Othman, Helin","Mathematik","6C","V"],["AH2QJE","Pawlak, Alisha","Mathematik","6C","V"],
+["9ZZBJF","Raulf, Celina","Mathematik","6C","V"],["DT56B2","Saighani, Sorosch","Mathematik","6C","V"],
+["B6E5Z3","Sarpong, Susana","Mathematik","6C","V"],["SLJH8X","Schwarzbrunn, Cheyenne","Mathematik","6C","V"],
+["8PMBJQ","Shaker, Shaker","Mathematik","6C","V"],["HF9YGP","Shutcha, Amour","Mathematik","6C","V"],
+["A1UZAU","Strek, Emilia Sophie","Mathematik","6C","V"],["AJRH2G","Tserkovna, Alisa","Mathematik","6C","V"],
+["U28Y24","Ural, Umut","Mathematik","6C","V"],
+
+["L55DQH","Ajdari, Ermina","Mathematik","7B","EK"],["5HXNUB","Al Kawas, Gadir","Mathematik","7B","EK"],
+["FU4BB3","Albaba, Mohamad Said","Mathematik","7B","EK"],["EQ5RLY","Ali, Salar","Mathematik","7B","EK"],
+["MK2VTZ","Arrami, Bilal","Mathematik","7B","EK"],["FA48UG","Bajrami, Ajet","Mathematik","7B","EK"],
+["QV1SHZ","Boateng Bamfo, Nana","Mathematik","7B","EK"],["16VCXY","Foitzik, Maya","Mathematik","7B","EK"],
+["NJM3ZW","Höver, Emily (Mia)","Mathematik","7B","EK"],["SQVMB9","Krafczyk, Luan","Mathematik","7B","EK"],
+["YK8LMN","Nasouf, Nilay","Mathematik","7B","EK"],["XF3T9U","Prekic, Andrej","Mathematik","7B","EK"],
+["JJ5P8T","Ravikumaran, Bavishaanan","Mathematik","7B","EK"],["7T1164","Said, Zahra","Mathematik","7B","EK"],
+["2B7XXZ","Schöll, Anna","Mathematik","7B","EK"],["D42PSS","Yilmaz, Ömer Isa","Mathematik","7B","EK"],
+
+["MYBUC9","Al Hashemi, Naser Victorio","Mathematik","7B","GK"],["PE18KY","Aljomaa Alhaded, Joudi","Mathematik","7B","GK"],
+["ZQAT7Q","Beyer, Melvin","Mathematik","7B","GK"],["1UEHT9","Bourichat, Akram","Mathematik","7B","GK"],
+["72SMJJ","Chyzhemskyi, Matvii","Mathematik","7B","GK"],["ZBQE93","Gervasi, Adriana","Mathematik","7B","GK"],
+["F63ERF","Nuna, Zakariya","Mathematik","7B","GK"],["5ZBQH3","Pollow, Colin Felix","Mathematik","7B","GK"],
+["8DX3P6","Polowinsky, Leia-Samentha","Mathematik","7B","GK"],["EXYM62","Safi, Behtar","Mathematik","7B","GK"],
+["GQYMT5","Schödel, Mia","Mathematik","7B","GK"],["2EYWCY","Stojkov, Leonardo","Mathematik","7B","GK"],
+["ZV16K2","Yilmaz, Zahide","Mathematik","7B","GK"],
+
+["L55DQH","Ajdari, Ermina","Physik","7B","V"],["MYBUC9","Al Hashemi, Naser Victorio","Physik","7B","V"],
+["5HXNUB","Al Kawas, Gadir","Physik","7B","V"],["FU4BB3","Albaba, Mohamad Said","Physik","7B","V"],
+["EQ5RLY","Ali, Salar","Physik","7B","V"],["PE18KY","Aljomaa Alhaded, Joudi","Physik","7B","V"],
+["MK2VTZ","Arrami, Bilal","Physik","7B","V"],["FA48UG","Bajrami, Ajet","Physik","7B","V"],
+["ZQAT7Q","Beyer, Melvin","Physik","7B","V"],["QV1SHZ","Boateng Bamfo, Nana","Physik","7B","V"],
+["1UEHT9","Bourichat, Akram","Physik","7B","V"],["72SMJJ","Chyzhemskyi, Matvii","Physik","7B","V"],
+["16VCXY","Foitzik, Maya","Physik","7B","V"],["ZBQE93","Gervasi, Adriana","Physik","7B","V"],
+["NJM3ZW","Höver, Emily (Mia)","Physik","7B","V"],["SQVMB9","Krafczyk, Luan","Physik","7B","V"],
+["YK8LMN","Nasouf, Nilay","Physik","7B","V"],["F63ERF","Nuna, Zakariya","Physik","7B","V"],
+["5ZBQH3","Pollow, Colin Felix","Physik","7B","V"],["8DX3P6","Polowinsky, Leia-Samentha","Physik","7B","V"],
+["XF3T9U","Prekic, Andrej","Physik","7B","V"],["JJ5P8T","Ravikumaran, Bavishaanan","Physik","7B","V"],
+["EXYM62","Safi, Behtar","Physik","7B","V"],["7T1164","Said, Zahra","Physik","7B","V"],
+["GQYMT5","Schödel, Mia","Physik","7B","V"],["2B7XXZ","Schöll, Anna","Physik","7B","V"],
+["2EYWCY","Stojkov, Leonardo","Physik","7B","V"],["D42PSS","Yilmaz, Ömer Isa","Physik","7B","V"],
+["ZV16K2","Yilmaz, Zahide","Physik","7B","V"],
+
+["3B5JFS","Adebayo, Destiny","Physik","7F","V"],["RXNY88","Ahmed, Adam","Physik","7F","V"],
+["28FB6S","Atabey, Ismail (Ismail)","Physik","7F","V"],["HP6URX","Boudra Jilah, Lilya","Physik","7F","V"],
+["ARBJ9W","Boutaba Bouda, Imran","Physik","7F","V"],["U3KCSW","Butuć, Valentina","Physik","7F","V"],
+["3TJ6GE","Foerster, Estefania","Physik","7F","V"],["JF5ZPL","Haagmans, Ramon","Physik","7F","V"],
+["3L6QTE","Hamidi, Mohammad","Physik","7F","V"],["W92ANX","Hertrampf Mandiola, Kurt Ignacio","Physik","7F","V"],
+["TD121B","Idić, Seara","Physik","7F","V"],["U5VRWA","Jidan, Yassin","Physik","7F","V"],
+["4FDN41","Joseph Stijo, Shawn","Physik","7F","V"],["K9U8HK","Kalinke, Jannik Achim","Physik","7F","V"],
+["DWKK57","Khaled, Raman","Physik","7F","V"],["F5TEWM","Maliqi, Maliq","Physik","7F","V"],
+["UPF1TL","Matysiak, Adoria","Physik","7F","V"],["8TXLDH","Meschter, Lisa","Physik","7F","V"],
+["QWRF1V","Minzu, Darian","Physik","7F","V"],["UES39Z","Mokk, Aliza","Physik","7F","V"],
+["VU4HRE","Muhamad, Dina","Physik","7F","V"],["DC96VB","Nazifov, Sali","Physik","7F","V"],
+["G3HKWR","Okla, Rafah","Physik","7F","V"],["K5PXMD","Ramdani, Idriss","Physik","7F","V"],
+["TRU64C","Rikkonen, Michelle","Physik","7F","V"],["NTR6YW","Sardar, Judy","Physik","7F","V"],
+["LUK4MM","Solnita, Nicolas","Physik","7F","V"],["C4TXRD","Yigman (Yığman), Zeynep","Physik","7F","V"],
+["DTTNP7","Zavada, Kyrylo","Physik","7F","V"],
+
+["XA6JS7","Al Hamad, Rada Sabah Hamad","Mathematik","9B","EK"],["9Z6G47","Dieler, Luisa","Mathematik","9B","EK"],
+["T9F9W6","Durmis, Damin","Mathematik","9B","EK"],["B28QAR","Erdal, Hüseyin Ali","Mathematik","9B","EK"],
+["NM3FAU","Gnyp, Lucy","Mathematik","9B","EK"],["E8KVFJ","Lahlou, Mohamed Salman","Mathematik","9B","EK"],
+["GW9E1T","Mettbach, Chelina Jesaja","Mathematik","9B","EK"],["65ZTAU","Özalp, Yusuf Said","Mathematik","9B","EK"],
+["T51Z6G","Stemmer, Mia Sophie","Mathematik","9B","EK"],["EC1SJW","Tücks, Luke Felix","Mathematik","9B","EK"],
+["K4XE82","Yilmaz, Elif","Mathematik","9B","EK"],
+["C271XG","Al Darabseh, Reem","Mathematik","9C","EK"],["BY2YPR","Albaba, Osaidh","Mathematik","9C","EK"],
+["RT9AQ5","Altinbas, Hatice","Mathematik","9C","EK"],["U4V3SU","Britz Perez, Naomi Anett","Mathematik","9C","EK"],
+["HRY55K","Draniceanu, Dragos","Mathematik","9C","EK"],["Y7ZKCB","Hami Aosi, Rouheef","Mathematik","9C","EK"],
+["YF1XSS","Tajaoui, Lina","Mathematik","9C","EK"]
+];
+
+
+const FOERDER = {
+  "Al Beirouti, Dania":      {extraMin:5},
+  "Al Hamad, Alind":         {extraMin:5, le:true},
+  "Kolaxizis, Noah":         {extraMin:5},
+  "Moustafa, Azize":         {extraMin:5, le:true},
+  "Blum, Lio Wilhelm":       {extraMin:5},
+  "Shutcha, Amour":          {extraMin:3, se:"en"},
+  "Bernsdorf, Emily":        {extraMin:5, le:true},
+  "Galali, Bahoz":           {extraMin:3},
+  "Kremsier, Philipp":       {extraMin:3},
+  "Pawlak, Alisha":          {extraMin:5, le:true},
+  "Schwarzbrunn, Cheyenne":  {extraMin:5, le:true},
+  "Hertrampf Mandiola, Kurt Ignacio": {extraMin:3, se:"es"}
+};
+
+
+const LZKS = [
+ {id:"u_daten",  name:"Übung Nr.1_Mathematik_Daten", fach:"Mathematik", klasse:"5C", kurs:"V", freigabe:null, ablauf:null, gen:"genDaten"},
+ {id:"u_grund",  name:"Übung Nr.2_Mathematik_Grundrechenarten", fach:"Mathematik", klasse:"5C", kurs:"V", freigabe:null, ablauf:null, gen:"genGrund"},
+ {id:"tv_kreis", name:"Testvorbereitung Nr.1_Mathematik_Kreis, Winkel u. Dreieck", fach:"Mathematik", klasse:"6C", kurs:"V", freigabe:[2026,10,13,12,30], ablauf:[2026,10,30,13,30], gen:"genKreis"},
+ {id:"lzk_codes",name:"LZK Nr.1_Informatik_Codes (Vorlage)", fach:"Informatik", klasse:"6C", kurs:"V", freigabe:[2026,10,15,14,10], ablauf:[2026,10,30,15,30], gen:"genCodes"},
+ {id:"tv_brueche",name:"Testvorbereitung Nr.1_Mathematik_Brüche", fach:"Mathematik", klasse:"7B", kurs:"*", freigabe:[2026,10,13,12,30], ablauf:[2026,10,13,20,0], gen:"genBrueche"},
+ {id:"lzk_sich7B",name:"LZK Nr.1_Physik_Sicherheit im Physikunterricht (7B)", fach:"Physik", klasse:"7B", kurs:"V", freigabe:[2026,10,14,8,0], ablauf:[2026,10,14,9,0], gen:"genSicherheit"},
+ {id:"lzk_sich7F",name:"LZK Nr.1_Physik_Sicherheit im Physikunterricht (7F)", fach:"Physik", klasse:"7F", kurs:"V", freigabe:[2026,10,14,10,55], ablauf:[2026,10,14,12,0], gen:"genSicherheit"},
+ {id:"u_licht7B",name:"Übung nach Versuch: Lichtbrechung beim Übergang von Luft in Glas (7B)", fach:"Physik", klasse:"7B", kurs:"V", freigabe:[2026,10,18,8,0], ablauf:[2026,10,21,9,0], gen:"genLichtbrechung", interaktiv:true},
+ {id:"u_licht7F",name:"Übung nach Versuch: Lichtbrechung beim Übergang von Luft in Glas (7F)", fach:"Physik", klasse:"7F", kurs:"V", freigabe:[2026,10,18,8,0], ablauf:[2026,10,21,9,0], gen:"genLichtbrechung", interaktiv:true},
+ {id:"tv_pot",   name:"Testvorbereitung Nr.1_Mathematik_Potenzen, Wurzel und Kreis (Vorlage)", fach:"Mathematik", klasse:"9B/9C", kurs:"EK", freigabe:[2026,10,13,8,0], ablauf:[2026,10,14,23,59], gen:"genPotenzen"}
+];
+
+const MIN_PRO_AUFGABE = {Mathematik:5, Physik:1.5, Informatik:1.5, NW:2.5};
+
+
+const $ = id => document.getElementById(id);
+function ri(n){ return Math.floor(Math.random()*n); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a||1; }
+function fmtZahl(x){ return Math.round(x*100)/100; }
+function deNum(s){ if(typeof s!=="string") return NaN; const v=parseFloat(s.replace(/\s/g,"").replace(",",".")); return v; }
+function fmtDT(a){ return a? `${String(a[2]).padStart(2,"0")}.${String(a[1]).padStart(2,"0")}.${a[0]}, ${String(a[3]).padStart(2,"0")}:${String(a[4]).padStart(2,"0")}` : null; }
+function berlinNow(){ return new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Berlin"})); }
+function parseDT(a){ return a? new Date(a[0],a[1]-1,a[2],a[3],a[4]) : null; }
+function showToast(msg, ms=3000){ const t=$("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none", ms); }
+
+
+function tText(nr, punkte, frage, loesung, opts={}){
+  return Object.assign({typ:"text", nr, punkte, frage, loesung, antwort:"", muster:String(loesung)}, opts);
+}
+function tRF(nr, punkte, frage, items, opts={}){ 
+  return Object.assign({typ:"rf", nr, punkte, frage, items, antworten:{}, muster:items.map(i=>i.q+" → "+(i.correct?"richtig":"falsch")).join(" | ")}, opts);
+}
+function tMC(nr, punkte, frage, options, correct, opts={}){ 
+  return Object.assign({typ:"mc", nr, punkte, frage, options, correct, antworten:{}, muster:options.filter((o,i)=>correct.includes(i)).join(" | ")}, opts);
+}
+function tLuecke(nr, punkte, frage, bank, pairs, opts={}){ 
+  return Object.assign({typ:"luecke", nr, punkte, frage, bank, pairs, antworten:{}, muster:pairs.map(p=>p.blank+": "+p.answer).join(" | ")}, opts);
+}
+function parseMixed(s){
+  if(typeof s!=="string") return NaN;
+  s=s.trim().replace(",",".");
+  let m=s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if(m) return parseInt(m[1])+parseInt(m[2])/parseInt(m[3]);
+  if(s.includes("/")){ const z=s.split("/").map(x=>parseFloat(x)); return z[1]? z[0]/z[1] : NaN; }
+  return parseFloat(s);
+}
+function tMulti(nr, punkte, frage, parts, opts={}){
+  return Object.assign({typ:"multi", nr, punkte, frage, parts, antworten:{},
+    muster:parts.map(p=>p.label+": "+(p.muster!==undefined?p.muster:p.loesung)).join(" | ")}, opts);
+}
+function tBruch(nr, punkte, frage, z, n, opts={}){
+  return Object.assign({typ:"bruch", nr, punkte, frage, z, n, antwort:null, muster:z+"/"+n}, opts);
+}
+
+function genFundMathe56(){ 
+  const typ = ri(2);
+  if(typ===0){
+    const a=5+ri(9), b=5+ri(9);
+    return tText("Fundamentum",3,`Berechne: ${a} · ${b} = ?`, a*b, {fund:true});
+  } else if(typ===1){
+    const a=2+ri(8), b=2+ri(8), big=a*b;
+    return tText("Fundamentum",3,`Berechne: ${big} : ${a} = ?`, b, {fund:true});
+  } else {
+    const zehner=[19,21,28,29,31,38,41,58,59,61];
+    const a=zehner[ri(zehner.length)], b=zehner[ri(zehner.length)];
+    const ea=Math.round(a/10)*10, eb=Math.round(b/10)*10;
+    return tText("Fundamentum",4,`Schätze und rechne mit Überschlag: ${a} · ${b} ≈ ? (Runde beide Faktoren auf den nächsten Zehner.)`, ea*eb,
+      {fund:true, muster:`${a} ≈ ${ea}, ${b} ≈ ${eb} → ${ea} · ${eb} = ${ea*eb}`, antwortHinweis:"Nur das Überschlagsergebnis eingeben."});
+  }
+}
+function genFundPhysik(){
+  const pool=[
+    ["Wie viele Zentimeter sind 2 Meter?","200",["200"],"How many centimetres are 2 metres?","¿Cuántos centímetros son 2 metros?"],
+    ["Welche Kraft zieht einen Gegenstand nach unten?","Die Gewichtskraft (die Erdanziehungskraft).",["gewichtskraft","anziehung","gravitation"],"Which force pulls an object downwards?","¿Qué fuerza tira de un objeto hacia abajo?"],
+    ["Ein Fahrrad fährt 20 m in 4 s. Wie schnell ist es (in m/s)?","5",["5"],"A bike travels 20 m in 4 s. How fast is it (in m/s)?","¿Cuántos centímetros son 2 metros?"],
+    ["Mit welchem Gerät misst man die Temperatur?","Mit dem Thermometer.",["thermometer"],"Which instrument do you use to measure temperature?","¿Con qué instrumento se mide la temperatura?"],
+    ["In welchem Aggregatzustand befindet sich Wasser bei 20 °C?","flüssig",["flüssig","fluessig"],"What is the state of water at 20 °C (solid, liquid or gas)?","¿En qué estado se encuentra el agua a 20 °C?"]
+  ];
+  const p=pool[ri(pool.length)];
+  const a=tText("Fundamentum",2,p[0],p[1],{fund:true, keywords:p[2]});
+  a.en={frage:p[3]}; a.es={frage:p[4]};
+  return a;
+}
+function genDaten(){
+  const t=[genFundMathe56()];
+  const namen=["Lesen","Sport","Malen","Musik","Spielen","Tiere"];
+  const werte=namen.map(()=>3+ri(7));
+  const summe=werte.reduce((a,b)=>a+b,0);
+  const bw=62, bh=22;
+  let bars="", skala="";
+  for(let s=0;s<=12;s+=3){ skala+=`<line x1="40" y1="${200-s*bh}" x2="420" y2="${200-s*bh}" stroke="#dde"/><text x="32" y="${204-s*bh}" font-size="11" text-anchor="end">${s}</text>`; }
+  werte.forEach((w,i)=>{ const x=55+i*bw;
+    bars+=`<rect x="${x}" y="${200-w*bh}" width="34" height="${w*bh}" fill="#2e7fc2" rx="4"/><text x="${x+17}" y="${196-w*bh}" font-size="13" text-anchor="middle" font-weight="bold">${w}</text><text x="${x+17}" y="216" font-size="12" text-anchor="middle">${namen[i]}</text>`;});
+  const svg=`<svg class="diagramm" viewBox="0 0 440 230" role="img" aria-label="Balkendiagramm Lieblingshobby"><text x="220" y="16" font-size="13" text-anchor="middle" font-weight="bold">Mein Lieblingshobby (Anzahl Kinder)</text>${skala}<line x1="40" y1="200" x2="420" y2="200" stroke="#333"/><line x1="40" y1="10" x2="40" y2="200" stroke="#333"/>${bars}</svg>`;
+  const CHART=`Das Diagramm zeigt die Lieblingshobbys der Klasse 5C.<br>${svg}`;
+  t.push(tMulti("Aufgabe 1",3,CHART+`<br><b>Lies das Diagramm ab:</b>`,[
+    {label:"a)", hinweis:"Wie viele Kinder wählen „Lesen“?", loesung:werte[0]},
+    {label:"b)", hinweis:"Wie viele Kinder wählen „Sport“?", loesung:werte[1]},
+    {label:"c)", hinweis:"Wie viele Kinder mehr wählen „Sport“ als „Lesen“?", loesung:Math.abs(werte[1]-werte[0])}]));
+  t.push(tMulti("Aufgabe 2",3,CHART+`<br><b>Rechne mit den Werten:</b>`,[
+    {label:"a)", hinweis:"Wie viele Kinder haben insgesamt abgestimmt?", loesung:summe},
+    {label:"b)", hinweis:"Der größte Wert gehört zu „${namen[werte.indexOf(Math.max(...werte))]}“ – wie groß ist er?", loesung:Math.max(...werte)}]));
+  t.push(tMulti("Aufgabe 3",4,CHART+`<br><b>Arbeite mit der Datenliste:</b>`,[
+    {label:"a)", hinweis:"Schreibe alle sechs Werte der Reihe nach als Liste (mit Kommas).", liste:werte, muster:werte.join(", ")},
+    {label:"b)", hinweis:"Sortiere dieselben Werte, kleinste zuerst (als Liste).", liste:[...werte].sort((x,y)=>x-y)}]));
+  t.push(tMulti("Aufgabe 4",3,CHART+`<br><b>Vergleiche:</b>`,[
+    {label:"a)", hinweis:"Wie viele Hobbys wurden von mehr als 6 Kindern gewählt?", loesung:werte.filter(w=>w>6).length},
+    {label:"b)", hinweis:"Wie viele Hobbys wurden von weniger als 5 Kindern gewählt?", loesung:werte.filter(w=>w<5).length}]));
+  t.push(tMulti("Aufgabe 5",4,`In der Klasse 5C sind ${summe+6} Kinder. In der Umfrage vom Diagramm haben ${werte[0]} Kinder „Lesen“ und ${werte[1]} Kinder „Sport“ gewählt.<br><b>Beantworte beide Fragen:</b>`,[
+    {label:"a)", hinweis:"Wie viele Kinder der Klasse haben ein anderes Hobby gewählt?", loesung:(summe+6)-werte[0]-werte[1]},
+    {label:"b)", hinweis:"Wie viele mehr ist das als die Kinder mit „Lesen“ und „Sport“ zusammen?", loesung:((summe+6)-werte[0]-werte[1])-(werte[0]+werte[1])}]));
+  const tabelle=`<table class="opts"><tr><th>Hobby</th><th>Kinder</th></tr>${namen.slice(0,4).map((n,i)=>`<tr><td>${n}</td><td>${werte[i]}</td></tr>`).join("")}</table>`;
+  t.push(tMulti("Aufgabe 6",3,`Nebenstehende Tabelle gehört zum Diagramm oben.<br>${tabelle}`,[
+    {label:"a)", hinweis:"Wie viele Kinder wählen „Malen“?", loesung:werte[2]},
+    {label:"b)", hinweis:"Wie viele Kinder mehr wählen „Musik“ als „Malen“?", loesung:Math.abs(werte[3]-werte[2])}]));
+  t.push(tText("Aufgabe 7",2,`Berechne den Mittelwert der vier Werte ${werte.slice(0,4).join(", ")} (Ergebnis auf eine ganze Zahl gerundet).`, Math.round(werte.slice(0,4).reduce((a,b)=>a+b,0)/4)));
+  t.push(tMulti("Aufgabe 8",4,`Bei einer zweiten Umfrage ändern sich die Werte: „Lesen“ bekommt 3 Stimmen dazu, „Sport“ verliert 2 Stimmen, die anderen bleiben gleich.`,[
+    {label:"a)", hinweis:"Wie viele Stimmen hat jetzt „Lesen“?", loesung:werte[0]+3},
+    {label:"b)", hinweis:"Wie viele Stimmen hat jetzt „Sport“?", loesung:werte[1]-2},
+    {label:"c)", hinweis:"Wie viele Stimmen gibt es jetzt insgesamt?", loesung:summe+1}]));
+  t.push(tMulti("Aufgabe 9",3,`${CHART}<br><b>Denke nach:</b>`,[
+    {label:"a)", hinweis:"Gibt es zwei Hobbys mit demselben Wert? Antworte „ja“ oder „nein“.", loesung:(new Set(werte).size<werte.length)?"ja":"nein", keywords:["ja","nein"]},
+    {label:"b)", hinweis:"Wie viele Kinder wählen „Lesen“ oder „Tiere“?", loesung:werte[0]+werte[5]}]));
+  t.push(tMulti("Aufgabe 10",4,`Textaufgabe: Für das Schulfest wollen die Kinder zwei Hobbys vorstellen. Sie rechnen: „${namen[0]}“ und „${namen[4]}“ zusammen haben ${werte[0]+werte[4]} Stimmen.<br><b>Prüfe und rechne weiter:</b>`,[
+    {label:"a)", hinweis:"Rechne nach: stimmt die Summe ${werte[0]+werte[4]}?", loesung:1, muster:"Ja, "+werte[0]+" + "+werte[4]+" = "+(werte[0]+werte[4])},
+    {label:"b)", hinweis:"Wie viele Stimmen haben diese zwei Hobbys mehr als „Musik“?", loesung:(werte[0]+werte[4])-werte[3]}]));
+  return t;
+}
+
+function genGrund(){
+  const t=[genFundMathe56()];
+  const a=6+ri(8), b=3+ri(6), c=2+ri(5);
+  t.push(tMulti("Aufgabe 1",3,`Rechne sorgfältig – Punkt-vor-Strich beachten:`,[
+    {label:"a)", hinweis:`${a} + ${b} · ${c}`, loesung:a+b*c},
+    {label:"b)", hinweis:`(${a} + ${b}) · ${c}`, loesung:(a+b)*c},
+    {label:"c)", hinweis:`${a} · ${b} − ${c}`, loesung:a*b-c}]));
+  const h=2, st=3, x1=2+ri(4), y1=2+ri(4), zahlen=20;
+  t.push(tMulti("Aufgabe 2",4,`Einkaufen: Ein Heft kostet ${h} € und ein Stift kostet ${st} €. Mia kauft ${x1} Hefte und ${y1} Stifte.`,[
+    {label:"a)", hinweis:"Wie viel kostet der Einkauf insgesamt?", loesung:x1*h+y1*st, muster:x1+"·"+h+" + "+y1+"·"+st+" = "+(x1*h+y1*st)+" €"},
+    {label:"b)", hinweis:`Sie bezahlt mit ${zahlen} €. Wie viel Rückgeld bekommt sie?`, loesung:zahlen-(x1*h+y1*st), muster:(zahlen-(x1*h+y1*st))+" €"}]));
+  const zz=5+ri(9), ee=2*zz+5;
+  t.push(tText("Aufgabe 3",3,`Zahlenrätsel: Ich denke an eine Zahl. Verdopple die Zahl und addiere 5. Das Ergebnis ist ${ee}.<br>Welche Zahl habe ich mir gedacht? (Tipp: Rechne rückwärts.)`, zz, {muster:"Rückwärts: ("+ee+" − 5) : 2 = "+zz}));
+  const k3=2+ri(3);
+  t.push(tText("Aufgabe 4",2,`Halbiere dreimal hintereinander und gib das Endergebnis an: ${6*k3*2*2} → → → ?`, 6*k3, {muster:(6*k3*2*2)+" : 2 = "+(6*k3*2)+" → "+(6*k3*2)+" : 2 = "+(6*k3)+" → "+(6*k3)+" : 2 = "+6*k3}));
+  const kinder=25+ri(6), sitze=9+ri(4), busse=Math.ceil(kinder/sitze);
+  t.push(tMulti("Aufgabe 5",4,`Klassenfahrt: ${kinder} Kinder der Klasse 5C fahren mit Bussen. Jeder Bus hat ${sitze} Sitzplätze.`,[
+    {label:"a)", hinweis:"Wie viele Busse werden mindestens gebraucht?", loesung:busse},
+    {label:"b)", hinweis:`Im letzten Bus bleiben Plätze frei – wie viele? (Alle Busse fahren voll bis auf den letzten.)`, loesung:busse*sitze-kinder}]));
+  const mz=6+ri(4), mr=mz*(3+ri(6));
+  t.push(tText("Aufgabe 6",2,`Ergänze die fehlende Zahl: ${mz} · ____ = ${mr}`, mr/mz));
+  t.push(tMulti("Aufgabe 7",3,`Vergleiche ohne zu rechnen – denke an die Rechengesetze:`,[
+    {label:"a)", hinweis:`${a} · ${b} und ${b} · ${a} – größer, kleiner oder gleich?`, loesung:"gleich", keywords:["gleich"]},
+    {label:"b)", hinweis:"Nenne das Rechengesetz, das das erklärt.", loesung:"Kommutativgesetz", keywords:["kommutativ"]}]));
+  const s1=7+ri(9), s2=6+ri(9), s3=2+ri(4);
+  t.push(tMulti("Aufgabe 8",4,`Zweischritt:`,[
+    {label:"a)", hinweis:`Addiere ${s1} und ${s2}.`, loesung:s1+s2},
+    {label:"b)", hinweis:`Multipliziere dein Ergebnis mit ${s3}.`, loesung:(s1+s2)*s3, muster:"("+s1+" + "+s2+") · "+s3+" = "+((s1+s2)*s3)}]));
+  const pv1=30+ri(30), pv2=2+ri(6), pv3=2+ri(6);
+  t.push(tText("Aufgabe 9",3,`Setze Klammern so, dass das Ergebnis stimmt, und rechne dann aus: ${pv1} − ${pv2} · ${pv3} (mit Klammern soll das Ergebnis ${(pv1-pv2)*pv3} herauskommen).`, (pv1-pv2)*pv3, {muster:"("+pv1+" − "+pv2+") · "+pv3+" = "+((pv1-pv2)*pv3)}));
+  const packs=2+ri(5), give=4+ri(8), q4=4+ri(6), st1=give+packs*q4;
+  t.push(tMulti("Aufgabe 10",4,`Sticker: Leon hat ${st1} Sticker. Er gibt ${give} Sticker an seine Schwester ab. Den Rest steckt er gleichmäßig auf ${packs} Seiten seines Albums.`,[
+    {label:"a)", hinweis:"Wie viele Sticker stecken auf jeder Seite?", loesung:(st1-give)/packs, muster:"("+st1+" − "+give+") : "+packs+" = "+((st1-give)/packs)},
+    {label:"b)", hinweis:"Wie viele Sticker hat er nach dem Abgeben noch?", loesung:st1-give}]));
+  return t;
+}
+function genKreis(){
+  const t=[];
+  const f=genFundMathe56();
+  { const mm=f.frage.match(/Berechne: (\d+) · (\d+) =/);
+    const md=f.frage.match(/Berechne: (\d+) : (\d+) =/);
+    const ms=f.frage.match(/Schätze und rechne mit Überschlag: (\d+) · (\d+) ≈/);
+    f.en = ms? {frage:`Estimate and calculate roughly: ${ms[1]} · ${ms[2]} ≈ ? Round both factors to the nearest ten and multiply.`}
+            : mm? {frage:`Calculate: ${mm[1]} · ${mm[2]} = ?`}
+            : md? {frage:`Calculate: ${md[1]} : ${md[2]} = ?`}
+            : {frage:"Basic calculation – work carefully and give your result."}; }
+  t.push(f);
+  const r=12+ri(16);
+  const kreisSvg=(rr)=>`<svg class="diagramm" viewBox="0 0 180 150" role="img" aria-label="Kreis mit Radius"><circle cx="90" cy="75" r="60" fill="none" stroke="#2e7fc2" stroke-width="3"/><line x1="90" y1="75" x2="150" y2="75" stroke="#c62828" stroke-width="2"/><text x="115" y="66" font-size="13" fill="#c62828" text-anchor="middle">r = ${rr} cm</text><text x="90" y="80" font-size="12" text-anchor="middle" font-weight="bold">M</text></svg>`;
+  const d=2*r;
+  const a1=tMulti("Aufgabe 1",3,`Rechne mit Radius und Durchmesser (Merke: d = 2 · r).`,[
+    {label:"a)", hinweis:`Ein Kreis hat den Radius r = ${r} cm. Wie lang ist der Durchmesser d?`, loesung:d, muster:"d = 2 · "+r+" = "+d+" cm"},
+    {label:"b)", hinweis:`Ein Kreis hat den Durchmesser d = ${d+2} cm. Wie lang ist der Radius r?`, loesung:(d+2)/2, muster:"r = "+(d+2)+" : 2 = "+((d+2)/2)+" cm"}]);
+  a1.en={frage:`Work with radius and diameter (remember: d = 2 · r). a) A circle has radius r = ${r} cm – how long is the diameter? b) A circle has diameter d = ${d+2} cm – how long is the radius?`};
+  t.push(a1);
+  const a2=tMulti("Aufgabe 2",4,`Schau dir die Zeichnung an.<br>${kreisSvg(r)}`,[
+    {label:"a)", hinweis:`Der Radius in der Zeichnung ist r = ${r} cm. Wie lang ist der Durchmesser des Kreises?`, loesung:d},
+    {label:"b)", hinweis:"Wie heißt die rote Strecke vom Mittelpunkt M zum Rand des Kreises (Radius oder Durchmesser)?", loesung:"Radius", keywords:["radius"]},
+    {label:"c)", hinweis:"Liegt der Mittelpunkt M auf der Kreislinie? Antworte „ja“ oder „nein“.", loesung:"nein", keywords:["nein"]}]);
+  a2.en={frage:`Look at the drawing. a) The radius is r = ${r} cm – how long is the diameter? b) What is the red line from the centre M to the edge called (radius or diameter)? c) Is the centre M on the circle line? Answer yes or no.`};
+  t.push(a2);
+  const a3=tMulti("Aufgabe 3",3,`Kreis-Wörter: Ordne die Fachwörter richtig zu.`,[
+    {label:"a)", hinweis:"Wie heißt die Strecke, die durch den Mittelpunkt geht und zwei Punkte der Kreislinie verbindet?", loesung:"Durchmesser", keywords:["durchmesser"]},
+    {label:"b)", hinweis:"Wie heißt der Mittelpunkt des Kreises (Buchstabe)?", loesung:"M", keywords:["m"]},
+    {label:"c)", hinweis:"Wie heißt die Linie, die den Kreis rundherum begrenzt?", loesung:"Kreislinie", keywords:["kreislinie"]}]);
+  a3.en={frage:`Circle words: a) What is the line through the centre called (diameter)? b) What letter marks the centre? c) What is the line around the circle called (circle line)?`};
+  t.push(a3);
+  const a4=tRF("Aufgabe 4",3,"Entscheide: richtig oder falsch?",[
+    {q:"Der Durchmesser ist immer doppelt so lang wie der Radius.", correct:true},
+    {q:"Der Radius ist ein Strich durch den ganzen Kreis.", correct:false},
+    {q:"Alle Punkte der Kreislinie haben denselben Abstand zum Mittelpunkt.", correct:true}]);
+  a4.en={frage:"Decide whether each statement is true or false."};
+  t.push(a4);
+  const a5=tMulti("Aufgabe 5",3,`Rechne in beide Richtungen (nur Radius und Durchmesser).`,[
+    {label:"a)", hinweis:`r = ${r+4} cm → d = ?`, loesung:2*(r+4)},
+    {label:"b)", hinweis:`d = ${2*(r+6)} cm → r = ?`, loesung:r+6}]);
+  a5.en={frage:`Convert both ways (radius and diameter only). a) r = ${r+4} cm → d? b) d = ${2*(r+6)} cm → r?`};
+  t.push(a5);
+  const a6=tMulti("Aufgabe 6",3,`Die Kreislinie – denke nach:`,[
+    {label:"a)", hinweis:"Was begrenzt den Kreis rundherum – Fläche oder Kreislinie?", loesung:"Kreislinie", keywords:["kreislinie"]},
+    {label:"b)", hinweis:"Wie viele Mittelpunkte hat ein Kreis?", loesung:1}]);
+  a6.en={frage:`The circle line: a) What surrounds the circle – area or circle line? b) How many centres does a circle have?`};
+  t.push(a6);
+  const a7=tMulti("Aufgabe 7",4,`Verdoppeln und Halbieren am Kreis:`,[
+    {label:"a)", hinweis:`Ein Kreis hat r = ${r+2} cm. Wie lang ist d?`, loesung:2*(r+2)},
+    {label:"b)", hinweis:"Ein zweiter Kreis hat den doppelten Radius. Was passiert mit dem Durchmesser – er verdoppelt sich auch. Wie lautet die Regel in Worten? (Schlüsselwort: doppelt)", loesung:"d verdoppelt sich", keywords:["doppelt","verdoppl"]}]);
+  a7.en={frage:`Doubling and halving: a) A circle has r = ${r+2} cm – how long is d? b) A second circle has double the radius – what happens to the diameter? (Key word: double)`};
+  t.push(a7);
+  const t1=2*(10+ri(6)), t2=t1/2;
+  const a8=tMulti("Aufgabe 8",4,`Zwei Teller liegen auf dem Tisch. Teller A hat den Durchmesser d = ${t1} cm.`,[
+    {label:"a)", hinweis:"Wie lang ist der Radius von Teller A?", loesung:t2},
+    {label:"b)", hinweis:`Teller B hat den Durchmesser d = ${t1+4} cm. Wie viel cm größer ist der Durchmesser von Teller B?`, loesung:4}]);
+  a8.en={frage:`Two plates: Plate A has diameter d = ${t1} cm. a) What is its radius? b) Plate B has d = ${t1+4} cm – how many cm bigger is its diameter?`};
+  t.push(a8);
+  const a9=tRF("Aufgabe 9",2,"Kreis-Grundwissen – richtig oder falsch?",[
+    {q:"Der Radius beginnt immer im Mittelpunkt.", correct:true},
+    {q:"Ein Kreis hat vier Ecken.", correct:false}]);
+  a9.en={frage:"Circle basics – true or false?"};
+  t.push(a9);
+  const fr=24+ri(8);
+  const a10=tMulti("Aufgabe 10",4,`Ein Fahrradreifen hat den Radius r = ${fr} cm.`,[
+    {label:"a)", hinweis:"Wie lang ist der Durchmesser des Reifens?", loesung:2*fr},
+    {label:"b)", hinweis:`Ein zweiter Reifen hat den Durchmesser d = ${2*fr+6} cm. Ist der zweite Reifen größer oder kleiner?`, loesung:"größer", keywords:["größer","groesser","größer"]},
+    {label:"c)", hinweis:"Um wie viel cm unterscheiden sich die beiden Durchmesser?", loesung:6}]);
+  a10.en={frage:`A bike tyre has radius r = ${fr} cm. a) How long is its diameter? b) A second tyre has diameter d = ${2*fr+6} cm – is it bigger or smaller? c) By how many cm do the diameters differ?`};
+  t.push(a10);
+  return t;
+}
+function bruchText(z,n){ return `<span style="display:inline-block;vertical-align:middle;text-align:center;margin:0 3px"><span style="display:block;border-bottom:2px solid #111;padding:0 6px">${z}</span><span style="display:block;padding:0 6px">${n}</span></span>`; }
+function genBrueche(kurs){
+  const t=[genFundMathe56()];
+  const mkMul=(nr,p)=>{ const a=1+ri(5),b=2+ri(6),c=1+ri(5),d=2+ri(6); const z=a*c,n=b*d,gg=gcd(z,n);
+    return tBruch(nr,p,`Berechne: ${bruchText(a,b)} · ${bruchText(c,d)} = ?`, z,n,{okGeKuerzt:(gg>1)}); };
+  const mkDiv=(nr,p)=>{ const a=1+ri(5),b=2+ri(6),c=1+ri(5),d=2+ri(6); const z=a*d,n=b*c,gg=gcd(z,n);
+    return tBruch(nr,p,`Berechne: ${bruchText(a,b)} : ${bruchText(c,d)} = ? (Dividiere durch den Kehrbruch.)`, z,n,{okGeKuerzt:(gg>1)}); };
+  const mkKu=(nr,p)=>{ const f=2+ri(4), z=(1+ri(5))*f, n=(2+ri(6))*f;
+    return tBruch(nr,p,`Kürze vollständig: ${bruchText(z,n)} = ?`, z/gcd(z,n), n/gcd(z,n)); };
+  let nr=1;
+  if(kurs==="EK"){
+    t.push(mkMul("Aufgabe "+(nr++),3)); t.push(mkDiv("Aufgabe "+(nr++),3)); t.push(mkKu("Aufgabe "+(nr++),2));
+    t.push(mkMul("Aufgabe "+(nr++),4)); t.push(mkDiv("Aufgabe "+(nr++),4));
+    const ka=2+ri(4), kb=3+ri(4), kz=ka*kb+ri(kb), kk=gcd(kz,kb);
+    t.push(tBruch("Aufgabe "+(nr++),4,`Textaufgabe: Ein Kuchen ist in ${kb} Stücke geteilt. Tom isst ${ka} Stücke. Welcher Bruchteil des Kuchens bleibt übrig?`, (kb*ka-kz+ (kb-kz%kb))% kb===0? kb-kz%kb||kb: kb-(kz%kb), kb,{okGeKuerzt:false, komplex:true}));
+    t.push(tBruch("Aufgabe "+(nr++),4,`Berechne und kürze vollständig: ${bruchText(2+ri(4),3+ri(5))} · ${bruchText(1+ri(4),2+ri(5))} + ${bruchText(1,2+ri(4))} – Hinweis: erst multiplizieren, dann addieren.`, 0,1,{checker:"skip", muster:"siehe Musterlösung der Lehrkraft"}));
+    t.push(tBruch("Aufgabe "+(nr++),5,`Textaufgabe (mittelschwer): Ein Rezept für 4 Personen braucht ${2+ri(3)} Tassen Mehl. Wie viele Tassen braucht man für ${8+ri(4)} Personen?`, 0,1,{checker:"skip", muster:"siehe Musterlösung der Lehrkraft"}));
+    t.push(tBruch("Aufgabe "+(nr++),5,`Textaufgabe (mittelschwer): Lena läuft ${1+ri(3)} Runden à ${1+ri(2)} km. Ihr Bruder läuft ${bruchText(1,2)} dieser Strecke. Wie viele km läuft der Bruder?`, 0,1,{checker:"skip", muster:"siehe Musterlösung der Lehrkraft"}));
+  } else {
+    t.push(mkMul("Aufgabe "+(nr++),3)); t.push(mkMul("Aufgabe "+(nr++),2)); t.push(mkKu("Aufgabe "+(nr++),2));
+    t.push(mkMul("Aufgabe "+(nr++),3)); t.push(mkDiv("Aufgabe "+(nr++),4)); t.push(mkMul("Aufgabe "+(nr++),2));
+    t.push(mkKu("Aufgabe "+(nr++),3));
+    const ka=1+ri(4), kb=3+ri(4);
+    t.push(tBruch("Aufgabe "+(nr++),4,`Textaufgabe (einfach): Sara hat einen Schokoriegel in ${kb} gleiche Teile geteilt und ${ka} Teile gegessen. Welcher Bruchteil ist noch übrig?`, kb-ka, kb,{okGeKuerzt:false}));
+    const ta=1+ri(3), tb=2+ri(5), tz=ta*2, tn=tb*2;
+    t.push(tBruch("Aufgabe "+(nr++),4,`Berechne: ${bruchText(ta,tb)} · 2 = ? (Verdopplung – Ergebnis als Bruch.)`, tz, tn,{okGeKuerzt:(gcd(tz,tn)>1)}));
+    const ma=1+ri(3), mb=2+ri(5), mc=1+ri(4), md=2+ri(5);
+    t.push(tBruch("Aufgabe "+(nr++),5,`Textaufgabe (mittelschwer): Ein Tank ist zu ${bruchText(ma,mb)} gefüllt. Es werden noch ${bruchText(mc,md)} des Tanks hinzugefügt. Welcher Bruchteil ist jetzt gefüllt?`, 0,1,{checker:"skip", muster:"siehe Musterlösung der Lehrkraft"}));
+  }
+  return t;
+}
+
+function genSicherheit(){
+  const t=[genFundPhysik()];
+  const rf=[
+    ["Bevor du eine Schaltung mit dem Stromnetz oder einem Netzgerät verbindest, muss der Schalter geöffnet sein und die Schaltung auf Fehler geprüft werden.", true, "Antes de conectar un circuito a la red eléctrica o a una fuente de alimentación, el interruptor debe estar abierto y hay que revisar el circuito."],
+    ["Im Physikraum darfst du nur mit Aufsicht der Lehrkraft oder nach ausdrücklicher Absprache an Versuchen arbeiten.", true, "En el aula de física solo se puede trabajar con la supervisión de la profesora o el profesor o después de un acuerdo expreso."],
+    ["Auch ein kleiner Laserpointer darf nie in Richtung von Augen oder spiegelnden Flächen gerichtet werden.", false, "Incluso un puntero láser pequeño nunca debe apuntarse hacia los ojos o superficies reflectantes."],
+    ["Heiße Flüssigkeiten oder heiße Platten transportierst du vorsichtig mit beiden Händen und nie über die Tischkante hinweg.", true, "Los líquidos calientes o las placas calientes se transportan con cuidado y nunca por encima del borde de la mesa."],
+    ["Wenn ein Gerät qualmt oder ungewöhnlich riecht, schaltest du es sofort aus und informierst die Lehrkraft – du prüfst nichts selbst an der Steckdose.", false, "Si un aparato echa humo u huele raro, se apaga de inmediato y se avisa a la profesora o el profesor; no se revisa nada en el enchufe."],
+    ["Zerbrochene Glasgefäße hebst du nur mit einem Besen und einer Kehrschaufel auf und entsorgst sie im Glas-Müll.", false, "Los recipientes de vidrio rotos se recogen solo con escoba y recogedor y se tiran al contenedor de vidrio."]
+  ];
+  shuffle(rf);
+  rf.slice(0,3).forEach((x,i)=>{
+    const a=tRF("Aufgabe "+(i+1),1,"Lies die Regel genau und entscheide: richtig oder falsch?", [{q:x[0], correct:x[1]}]);
+    a.es={frage:"Lee la regla con atención y decide si es verdadera o falsa.", items:[x[2]]};
+    t.push(a);
+  });
+  const bank1=[["Strom aus","corriente apagada"],["Lehrkraft informieren","avisar a la profesora o el profesor"],["vorsichtig tragen","transportar con cuidado"],["Abstand halten","mantener distancia"],["Laser in die Augen richten","apuntar el láser a los ojos"],["sofort schmecken","probarlo de inmediato"]];
+  shuffle(bank1);
+  const a4=tLuecke("Aufgabe 4",4,
+    "Sicherheitskarte A – ergänze die Sätze mit den Begriffen aus der Wortbank. (1) Riecht ein Gerät verbrannt oder qualmt es, schaltest du zuerst den ___ und informierst umgehend die ___. (2) Heiße Flüssigkeiten ___ man grundsätzlich mit beiden Händen und hält dabei immer ___ zum eigenen Körper.",
+    bank1.map(x=>x[0]),
+    [{blank:"Lücke 1", answer:"Strom aus"},{blank:"Lücke 2", answer:"Lehrkraft informieren"},{blank:"Lücke 3", answer:"vorsichtig tragen"},{blank:"Lücke 4", answer:"Abstand halten"}]);
+  a4.es={frage:"Tarjeta de seguridad A – completa las frases con el banco de palabras: (1) Si un aparato huele quemado o echa humo, primero cortas la ___ y avisas de inmediato a la ___. (2) Los líquidos calientes siempre se ___ con las dos manos y se mantiene ___ del cuerpo."};
+  t.push(a4);
+  const bank2=shuffle(["Augen","beaufsichtigt","reflektierende","Pizza","sofort schmecken","ohne Aufsicht"]);
+  const a5=tLuecke("Aufgabe 5",3,
+    "Sicherheitskarte B – Laserschutz: Ergänze die Sätze mit den Begriffen aus der Wortbank. (1) Man richtet den Laser niemals in die ___ anderer Menschen. (2) Der Laser wird nur ___ von der Lehrkraft verwendet. (3) ___ Gegenstände hält man fern vom Strahlengang.",
+    bank2,
+    [{blank:"Lücke 1", answer:"Augen"},{blank:"Lücke 2", answer:"beaufsichtigt"},{blank:"Lücke 3", answer:"reflektierende"}]);
+  a5.es={frage:"Tarjeta de seguridad B – protección láser: (1) Nunca se apunta el láser a los ___ de otras personas. (2) El láser se usa solo ___ por la profesora o el profesor. (3) Los objetos ___ se mantienen lejos del rayo."};
+  t.push(a5);
+  const mk=(nr,p,frage,opts,corr,esFrage,single)=>{
+    const a=tMC(nr,p,frage,opts,corr);
+    if(single) a.single=true;
+    a.es={frage:esFrage};
+    t.push(a);
+  };
+  mk("Aufgabe 6",3,"Beim Aufräumen nach dem Experiment fällt dir ein zerbrochenes Reagenzglas auf dem Boden auf. Was ist die richtige Vorgehensweise? (Genau eine Antwort ist richtig.)",
+    ["Lehrkraft informieren, Glas mit Besen und Kehrschaufel aufsammeln","das Glas mit den bloßen Händen wegräumen","das Glas wegkehren und im normalen Mülleimer entsorgen","weitermachen – die Lehrkraft bemerkt es schon"],[0],
+    "Al ordenar después del experimento ves un tubo de vidrio roto en el suelo. ¿Qué debes hacer? (Solo una respuesta es correcta.)", true);
+  mk("Aufgabe 7",4,"Du hast eine Schaltung mit einem Netzgerät aufgebaut und möchtest sie jetzt in Betrieb nehmen. Was musst du VOR dem Anschluss unbedingt getan haben? (Zwei Antworten sind richtig.)",
+    ["Schalter geöffnet lassen und die Schaltung auf Kurzschluss prüfen","alle Leitungen auf lockere Kontakte kontrollieren","die Schaltung sofort mit beiden Händen einschalten","die Finger nass machen, um besser zu greifen"],[0,1],
+    "Has montado un circuito con una fuente de alimentación y quieres ponerlo en marcha. ¿Qué debes haber hecho ANTES de conectarlo? (Dos respuestas son correctas.)");
+  mk("Aufgabe 8",6,"Laser-Check: Welche Verhaltensweisen sind beim Umgang mit Lasern Pflicht? (Drei von fünf Antworten sind richtig.)",
+    ["niemals in Richtung Augen oder anderer Schüler richten","keine reflektierenden Gegenstände in den Strahlbereich stellen","den Laser nur mit Aufsicht der Lehrkraft verwenden","kurz in den Strahl schauen, um die Richtung zu prüfen","den Strahl zum Scherzen auf Mitschüler richten"],[0,1,2],
+    "Control de láser: ¿Qué comportamientos son obligatorios? (Tres de cinco respuestas son correctas.)");
+  mk("Aufgabe 9",8,"Großer Sicherheits-Check: Welche Regeln gelten generell im Physikraum? (Vier von sechs Antworten sind richtig.)",
+    ["Arbeitsplatz nach dem Experiment aufräumen","bei Fehlern oder Qualm sofort die Lehrkraft informieren","heiße Gegenstände nur mit Topflappen anfassen","im Raum ruhig gehen und nicht schubsen","unbeaufsichtigte Geräte eingeschaltet lassen","Glasscherben mit den bloßen Händen aufheben"],[0,1,2,3],
+    "Gran control de seguridad: ¿Qué reglas valen generalmente en el aula de física? (Cuatro de seis respuestas son correctas.)");
+  return t;
+}
+function mitBegruendung(a, optionen, richtig, hinweis){
+  const opts=shuffle([...optionen]);
+  a.begruendung={options:opts, correct:opts.indexOf(richtig), hinweis};
+  a.hinweis=hinweis;
+  return a;
+}
+function mitSpanisch(a, frage){ a.es={frage}; return a; }
+function lichtMessTabelle(){
+  return `<table class="opts"><tr><th>Einfallswinkel α</th><th>Brechungswinkel β</th></tr><tr><td>0°</td><td>0°</td></tr><tr><td>15°</td><td>10°</td></tr><tr><td>30°</td><td>20°</td></tr><tr><td>45°</td><td>28°</td></tr><tr><td>60°</td><td>35°</td></tr></table>`;
+}
+function genLichtbrechung(){
+  const t=[];
+  let a;
+  a=tMC("Aufgabe 1",4,"Ein schmaler Lichtstrahl trifft schräg von Luft auf die gerade Fläche des Glaskörpers. Wie verläuft er im Glas?",[
+    "Er wird zum Lot hin gebrochen.","Er wird vom Lot weg gebrochen.","Er verläuft ohne jede Richtungsänderung weiter.","Er wird an der Oberfläche vollständig reflektiert."],[0],{single:true,niveau:"leicht"});
+  mitBegruendung(a,["Der Brechungswinkel zum Lot ist im Glas kleiner als der Einfallswinkel in Luft.","Das Lot steht parallel zur Glasoberfläche.","Der Strahl kehrt immer in die Optikleuchte zurück."],"Der Brechungswinkel zum Lot ist im Glas kleiner als der Einfallswinkel in Luft.","Vergleiche Einfallswinkel und Brechungswinkel jeweils mit dem Lot.");
+  mitSpanisch(a,"Un rayo de luz estrecho llega inclinado desde el aire a la superficie plana del vidrio. ¿Cómo sigue dentro del vidrio? Elige la respuesta y después una explicación."); t.push(a);
+
+  a=tRF("Aufgabe 2",4,"Beurteile die Aussage zum Messen der Winkel.",[
+    {q:"Der Einfallswinkel wird zwischen dem einfallenden Strahl und dem Lot gemessen.",correct:true}
+  ],{jaNein:true,niveau:"leicht",muster:"Ja – Einfallswinkel und Brechungswinkel werden zum Lot gemessen."});
+  mitBegruendung(a,["Das Lot steht senkrecht auf der Grenzfläche und ist die gemeinsame Bezugslinie.","Die Grenzfläche selbst ist immer die Bezugslinie für beide Winkel.","Der Winkel wird zwischen Optikleuchte und Glaskörper gemessen."],"Das Lot steht senkrecht auf der Grenzfläche und ist die gemeinsame Bezugslinie.","Suche die Bezugslinie, die senkrecht auf der Grenzfläche steht.");
+  mitSpanisch(a,"Decide si la afirmación es correcta: El ángulo de incidencia se mide entre el rayo incidente y la normal. Elige una explicación."); t.push(a);
+
+  a=tLuecke("Aufgabe 3",4,"Ergänze den Versuchsaufbau mit der Wortbank. (1) Die ___ erzeugt einen schmalen Lichtstrahl. (2) Mit der ___ werden die Winkel abgelesen. (3) Der Strahl trifft auf den ___. (4) Die Bezugslinie für die Winkel ist das ___.",
+    shuffle(["Optikleuchte","Winkelscheibe","halbkreisförmige Glaskörper","Lot","Bunsenbrenner","Stoppuhr"]),
+    [{blank:"Lücke 1",answer:"Optikleuchte"},{blank:"Lücke 2",answer:"Winkelscheibe"},{blank:"Lücke 3",answer:"halbkreisförmige Glaskörper"},{blank:"Lücke 4",answer:"Lot"}],
+    {auswahl:true,niveau:"mittel",hinweis:"Ordne jedes Gerät seiner Aufgabe im Versuch zu."});
+  mitSpanisch(a,"Completa el montaje con el banco de palabras: linterna óptica, disco de ángulos, cuerpo de vidrio semicircular y normal."); t.push(a);
+
+  a=tMC("Aufgabe 4",4,"Warum wird ein halbkreisförmiger Glaskörper verwendet, dessen Mittelpunkt auf der Winkelscheibe liegt?",[
+    "Trifft der Strahl radial auf die gekrümmte Fläche, verlässt er das Glas dort ohne Richtungsänderung.","Die gekrümmte Fläche verstärkt den Lichtstrahl.","Der Glaskörper verhindert jede Reflexion an der geraden Fläche.","Die Winkelscheibe wird dadurch überflüssig."],[0],{single:true,niveau:"mittel"});
+  mitBegruendung(a,["Der radiale Strahl trifft senkrecht auf die gekrümmte Grenzfläche.","Ein radialer Strahl trifft immer parallel zur gekrümmten Grenzfläche.","Glas kann Licht nur an gekrümmten Flächen brechen."],"Der radiale Strahl trifft senkrecht auf die gekrümmte Grenzfläche.","Achte auf den Strahl durch den Kreismittelpunkt: Seine Richtung ist dort radial.");
+  mitSpanisch(a,"¿Por qué se usa un cuerpo de vidrio semicircular cuyo centro coincide con el centro del disco de ángulos? Elige una explicación."); t.push(a);
+
+  a=tMC("Aufgabe 5",6,"Werte die Messwerttabelle aus. Welche zwei Aussagen passen zu den Werten?<br>"+lichtMessTabelle(),[
+    "Bei schrägem Einfall ist der Brechungswinkel jeweils kleiner als der Einfallswinkel.","Der Brechungswinkel ist stets genau halb so groß wie der Einfallswinkel.","Mit größer werdendem Einfallswinkel wird auch der Brechungswinkel größer.","Bei 45° bleibt der Winkel unverändert."],[0,2],{niveau:"anspruchsvoll"});
+  mitBegruendung(a,["Der zeilenweise Vergleich zeigt kleinere Brechungswinkel und gleichsinnige Änderungen.","Nur die erste Tabellenzeile entscheidet über alle Messwerte.","Die Differenz der beiden Winkel ist in jeder Zeile gleich."],"Der zeilenweise Vergleich zeigt kleinere Brechungswinkel und gleichsinnige Änderungen.","Vergleiche jede Zeile und prüfe auch, ob die Winkel immer dasselbe Verhältnis haben.");
+  mitSpanisch(a,"Analiza la tabla de medidas. ¿Qué dos afirmaciones coinciden con los valores? Después elige una explicación."); t.push(a);
+
+  a=tRF("Aufgabe 6",6,"Beurteile die Aussage mithilfe der Tabelle aus Aufgabe 5.",[
+    {q:"Wird der Einfallswinkel von 30° auf 60° verdoppelt, beträgt der Brechungswinkel 40°.",correct:false}
+  ],{jaNein:true,niveau:"anspruchsvoll",muster:"Nein – Bei 60° beträgt der Brechungswinkel in der Tabelle 35°."});
+  mitBegruendung(a,["In der Tabelle gehören zu 60° genau 35° als Brechungswinkel.","Brechungswinkel und Einfallswinkel verdoppeln sich immer gemeinsam.","Der Brechungswinkel bleibt bei jeder Änderung konstant."],"In der Tabelle gehören zu 60° genau 35° als Brechungswinkel.","Lies die Tabellenzeile für 60° ab, statt ein festes Verhältnis anzunehmen.");
+  mitSpanisch(a,"Decide con la tabla: Si el ángulo de incidencia pasa de 30° a 60°, el ángulo de refracción es 40°. Elige una explicación."); t.push(a);
+
+  a=tLuecke("Aufgabe 7",6,"Vergleiche die Messwerte aus Aufgabe 5. (1) Bei 15° ist der Brechungswinkel ___ als der Einfallswinkel. (2) Bei 30° ist der Brechungswinkel ___ als der Einfallswinkel. (3) Von 30° auf 60° wächst der Einfallswinkel um 30°, der Brechungswinkel dagegen um ___.",
+    shuffle(["kleiner","größer","gleich groß","15°","30°","35°"]),
+    [{blank:"Vergleich 1",answer:"kleiner"},{blank:"Vergleich 2",answer:"kleiner"},{blank:"Änderung",answer:"15°"}],
+    {auswahl:true,niveau:"anspruchsvoll",hinweis:"Nutze die Paare 15°/10°, 30°/20° und die Werte 20° sowie 35°."});
+  mitSpanisch(a,"Compara los valores de la tabla: completa dos comparaciones y calcula el aumento del ángulo de refracción entre las dos últimas filas."); t.push(a);
+
+  a=tMC("Aufgabe 8",6,"Eine Schülerin liest den Einfallswinkel zwischen Strahl und Glasoberfläche ab. Ihr Wert beträgt 60°. Welche Auswertung ist fachlich richtig?",[
+    "Sie hat die falsche Bezugslinie benutzt; zum Lot beträgt der Einfallswinkel 30°.","Der Einfallswinkel beträgt ebenfalls 60°, denn die Bezugslinie ist frei wählbar.","Der richtige Einfallswinkel beträgt 120°.","Ein Einfallswinkel kann nur an der gekrümmten Fläche gemessen werden."],[0],{single:true,niveau:"anspruchsvoll"});
+  mitBegruendung(a,["Oberfläche und Lot stehen senkrecht zueinander; 90° − 60° = 30°.","Oberfläche und Lot sind dieselbe Linie.","Winkel zur Oberfläche werden immer verdoppelt."],"Oberfläche und Lot stehen senkrecht zueinander; 90° − 60° = 30°.","Prüfe zuerst die Bezugslinie und nutze den rechten Winkel zwischen Oberfläche und Lot.");
+  mitSpanisch(a,"Una alumna mide 60° entre el rayo y la superficie del vidrio. ¿Qué evaluación es correcta? Elige una explicación."); t.push(a);
+
+  a=tLuecke("Aufgabe 9",6,"Bringe die Abschnitte eines Versuchsprotokolls in eine sinnvolle Reihenfolge.",
+    shuffle(["Fragestellung und Versuchsaufbau","Durchführung","Beobachtungen und Messwerte","Auswertung und Erklärung","Beliebige Vermutung ohne Versuch"]),
+    [{blank:"1. Abschnitt",answer:"Fragestellung und Versuchsaufbau"},{blank:"2. Abschnitt",answer:"Durchführung"},{blank:"3. Abschnitt",answer:"Beobachtungen und Messwerte"},{blank:"4. Abschnitt",answer:"Auswertung und Erklärung"}],
+    {auswahl:true,niveau:"anspruchsvoll",hinweis:"Erst planen und aufbauen, dann durchführen und protokollieren, zuletzt erklären."});
+  mitSpanisch(a,"Ordena las partes de un informe del experimento: planteamiento y montaje, realización, observaciones y medidas, análisis y explicación."); t.push(a);
+
+  a=tMC("Aufgabe 10",6,"Welcher Satz gehört im Versuchsprotokoll zu „Beobachtungen und Messungen“ und nicht zu „Erklärung“?",[
+    "Bei einem Einfallswinkel von 30° wurde ein Brechungswinkel von 20° gemessen.","Das Licht ändert seine Richtung, weil es in ein anderes Material eintritt.","Der Versuch zeigt, dass Licht zum Lot hin gebrochen wird.","Der Zusammenhang der Winkel lässt sich mit der Ausbreitung des Lichts erklären."],[0],{single:true,niveau:"anspruchsvoll"});
+  mitBegruendung(a,["Der Satz berichtet nur einen abgelesenen Messwert, ohne ihn zu deuten.","Der Satz enthält eine Ursache und gehört deshalb zur Erklärung.","Jede Aussage mit einer Zahl ist automatisch eine Erklärung."],"Der Satz berichtet nur einen abgelesenen Messwert, ohne ihn zu deuten.","Trenne das bloße Beobachten und Messen von Ursachen und Deutungen.");
+  mitSpanisch(a,"¿Qué frase pertenece a «Observaciones y medidas» y no a «Explicación» en el informe? Elige una explicación."); t.push(a);
+
+  a=tRF("Aufgabe 11",6,"Beurteile die Aussage zum Umgang mit Messwerten.",[
+    {q:"Bei wiederholten Messungen deutlich abweichende Werte müssen nicht auf Ablesefehler geprüft werden.",correct:false}
+  ],{jaNein:true,niveau:"anspruchsvoll",muster:"Nein – Deutliche Abweichungen müssen kontrolliert und die Messung gegebenenfalls wiederholt werden."});
+  mitBegruendung(a,["Kontrolle und Wiederholung helfen, Ablesefehler und Aufbaufehler zu erkennen.","Die zuerst notierte Zahl ist immer die genaueste.","Abweichungen beweisen automatisch ein neues physikalisches Gesetz."],"Kontrolle und Wiederholung helfen, Ablesefehler und Aufbaufehler zu erkennen.","Überlege, wie man zufällige Ablese- oder Aufbaufehler entdecken kann.");
+  mitSpanisch(a,"Decide: Las medidas repetidas con diferencias claras no necesitan revisarse para detectar errores de lectura. Elige una explicación."); t.push(a);
+
+  a=tMC("Aufgabe 12",6,"Welche drei Schlussfolgerungen sind durch den Versuch und die Messwerte insgesamt gerechtfertigt?",[
+    "Beim schrägen Übergang von Luft in Glas wird der Strahl zum Lot hin gebrochen.","Größere Einfallswinkel führen hier zu größeren Brechungswinkeln.","Einfallswinkel und Brechungswinkel sind immer proportional.","Ein radial auf die gekrümmte Fläche treffender Strahl wird dort nicht umgelenkt.","Beim Eintritt in Glas wird Licht stets vom Lot weg gebrochen."],[0,1,3],{niveau:"anspruchsvoll"});
+  mitBegruendung(a,["Die Strahlbeobachtung, die Tabellenwerte und der radiale Verlauf stützen genau diese drei Aussagen.","Eine Proportionalität folgt bereits aus einem einzigen Messwertpaar.","Jede Grenzfläche lenkt Licht in dieselbe Richtung ab."],"Die Strahlbeobachtung, die Tabellenwerte und der radiale Verlauf stützen genau diese drei Aussagen.","Prüfe jede Schlussfolgerung einzeln: Passt sie zur Beobachtung und zu allen Messwerten?");
+  mitSpanisch(a,"¿Qué tres conclusiones están justificadas por el experimento y las medidas completas? Después elige una explicación."); t.push(a);
+  return t;
+}
+
+function genCodes(){
+  const t=[genFundPhysik()];
+  const a1=tMC("Aufgabe 1",2,"Wozu wurden Codes und Geheimschriften früher verwendet? Kreuze zwei richtige Antworten an.",
+    ["Um geheime Nachrichten zu übermitteln.","Um Nachrichten vor fremden Menschen zu schützen.","Um schneller zu kochen.","Um Bilder zu malen."],
+    [0,1],{mcAnzahl:2});
+  a1.en={frage:"What were codes and secret writing used for in the past? Tick two correct answers.",
+    options:["To send secret messages.","To protect messages from strangers.","To cook faster.","To paint pictures."]};
+  t.push(a1);
+  const a2=tLuecke("Aufgabe 2",6,
+    "Ergänze die Sätze mit den Wörtern aus der Wortbank. (1) Mit dem Morsecode wurden Nachrichten mithilfe von ___ und ___ übermittelt. (2) Früher wurden geheime Nachrichten zum Beispiel in ___ verschlüsselt. (3) Schiffe konnten mithilfe von Zeichen oder ___ Nachrichten austauschen.",
+    shuffle(["Flaggen","Pizza","Punkten","Kriegen","Strichen"]),
+    [{blank:"Lücke 1",answer:"Punkten"},{blank:"Lücke 2",answer:"Strichen"},{blank:"Lücke 3",answer:"Kriegen"},{blank:"Lücke 4",answer:"Flaggen"}]);
+  a2.en={frage:"Complete the sentences with the words from the word bank: (1) With Morse code, messages were sent using ___ and ___. (2) In the past, secret messages were encrypted in ___, for example. (3) Ships could exchange messages using signs or ___.",
+    bank:shuffle(["flags","pizza","dots","wars","lines"])};
+  t.push(a2);
+  const a3a=tText("Aufgabe 3a",3,"Entschlüssele die Nachricht. (★=H, ●=A, ▲=L, ■=O) ★ ● ▲ ▲ ■",
+    "HALLO",{keywords:["hallo"], muster:"HALLO"});
+  a3a.en={frage:"Decode the message. (★=H, ●=A, ▲=L, ■=O) ★ ● ▲ ▲ ■"}; t.push(a3a);
+  const a3b=tText("Aufgabe 3b",2,"Entschlüssele das Wort. (◆=M, ●=A, ☀=I) ◆ ● ☀",
+    "MAI",{keywords:["mai"], muster:"MAI"});
+  a3b.en={frage:"Decode the word. (◆=M, ●=A, ☀=I) ◆ ● ☀"}; t.push(a3b);
+  const a4a=tText("Aufgabe 4a",3,"Erfinde deinen eigenen Code und schreibe eine geheime Nachricht (Wort oder kurzer Satz).",
+    "Eigener Code – Musterlösung offen.",{checker:"any", muster:"Individuell – Nachricht muss mit dem eigenen Code verschlüsselt sein."});
+  a4a.en={frage:"Invent your own code and write a secret message (one word or a short sentence)."}; t.push(a4a);
+  const a4b=tText("Aufgabe 4b",3,"Erkläre deinen Code: Wie kann jemand deine Nachricht entschlüsseln?",
+    "Erklärung des eigenen Codes.",{checker:"any", keywords:["code","zeichen","buchstabe","tabelle","schlüssel"], muster:"Erklärung muss Schlüssel/Zuordnung der Zeichen enthalten."});
+  a4b.en={frage:"Explain your code: How can someone decode your message?"}; t.push(a4b);
+  const a5a=tText("Aufgabe 5a",2,"Nenne ein Beispiel, bei dem heute Codes verwendet werden.",
+    "z. B. PIN, Passwort, Barcode, QR-Code.",{keywords:["pin","passwort","barcode","qr","code"]});
+  a5a.en={frage:"Name one example where codes are used today."}; t.push(a5a);
+  const a5b=tText("Aufgabe 5b",2,"Warum ist es manchmal sinnvoll, eine Nachricht zu verschlüsseln?",
+    "Damit sie nur der richtige Empfänger lesen kann / Geheimhaltung / Schutz.",{keywords:["geheim","schutz","empfänger","nur","lesen","sicher"]});
+  a5b.en={frage:"Why can it be useful to encrypt a message?"}; t.push(a5b);
+  const a5c=tText("Aufgabe 5c",1,"Was braucht jemand, um deine Geheimnachricht lesen zu können?",
+    "Den Schlüssel / die Zuordnung (Code-Tabelle).",{keywords:["schlüssel","code","tabelle","zuordnung","key"]});
+  a5c.en={frage:"What does someone need to read your secret message?"}; t.push(a5c);
+  return t;
+}
+function genPotenzen(){
+  const t=[
+   tText("Fundamentum 1",3,"Schreibe als Potenz und gib Basis und Exponent an: 5 · 5 · 5 = ____  (Antwortformat: 5^3)","5^3",{keywords:["5^3","125"], muster:"5 · 5 · 5 = 5^3. Basis: 5, Exponent: 3"}),
+   tText("Fundamentum 2a",1,"Rechne im Kopf: 10² = ____","100",{musteR:"100"}),
+   tText("Fundamentum 2b",1,"Rechne im Kopf: (−2)³ = ____","−8",{keywords:["-8","−8"], muster:"(−2)³ = −8"}),
+   tText("Fundamentum 2c",1,"Rechne im Kopf: ∛64 = ____","4",{muster:"∛64 = 4"}),
+   tText("Fundamentum 2d",1,"Rechne im Kopf: √0,25 = ____ (Komma oder Punkt)","0,5",{keywords:["0.5","0,5"], muster:"√0,25 = 0,5"}),
+   tText("Fundamentum 2e",1,"Rechne im Kopf: 2⁴ = ____","16",{muster:"2⁴ = 16"}),
+   tText("Fundamentum 2f",1,"Rechne im Kopf: √(36/25) = ____","1,2",{keywords:["1.2","1,2"], muster:"√(36/25) = 6/5 = 1,2"}),
+   tText("Fundamentum 3a",1,"Ergänze: __² = 81","9",{muster:"9² = 81"}),
+   tText("Fundamentum 3b",1,"Ergänze: 0,3^__ = 0,09","2",{muster:"0,3² = 0,09"}),
+   tText("Fundamentum 3c",1,"Ergänze: __³ = −125","−5",{keywords:["-5","−5"], muster:"(−5)³ = −125"}),
+   tText("Fundamentum 3d",1,"Ergänze: √___ = 6","36",{muster:"√36 = 6"}),
+   tText("Fundamentum 3e",1,"Ergänze: ___⁴ = 10000","10",{muster:"10⁴ = 10000"}),
+   tText("Fundamentum 3f",1,"Ergänze: 2^__ = 32","5",{muster:"2^5 = 32"}),
+   tText("Fundamentum 4a",2,"Berechne (Wurzelgesetze): √5 · √20 = ____","10",{muster:"√(5·20) = √100 = 10"}),
+   tText("Fundamentum 4b",2,"Berechne (Wurzelgesetze): √0,5 · √100 = ____","5√2 ≈ 7,07",{keywords:["7.07","7,07","5√2","5wurzel"], muster:"√50 = 5√2 ≈ 7,07"}),
+   tText("Fundamentum 4c",2,"Berechne (Wurzelgesetze): √125 : √5 = ____","5",{muster:"√(125:5) = √25 = 5"}),
+   tRF("Fundamentum 5a",1,"Jonah rechnet: √36 + √64 = √(36+64) = √100 = 10. Hat Jonah Recht?",[{q:"Ja / Nein",correct:false}],{muster:"Nein"}),
+   tText("Fundamentum 5b",1,"Erkläre Jonah in eigenen Worten, welchen Fehler er gemacht hat, und wie die Aufgabe richtig zu lösen ist.",
+     "√36 + √64 = 6 + 8 = 14; man darf die Summe nicht unter eine gemeinsame Wurzel ziehen.",{checker:"kw", keywords:["14","6","8","nicht","wurzel"], muster:"√36 + √64 = 6 + 8 = 14. Wurzeln darf man bei einer Summe nicht zusammenfassen."}),
+   tText("Aufgabe 1a",1,"Gib an, zwischen welchen natürlichen Zahlen die Wurzel liegt (Format: 4 < √20 < 5):","4 < √20 < 5",{keywords:["4","5"], muster:"4 < √20 < 5, da 4² = 16 < 20 < 25 = 5²"}),
+   tText("Aufgabe 1b",1,"Gib an, zwischen welchen natürlichen Zahlen die Wurzel liegt:","2 < √8 < 3",{keywords:["2","3"], muster:"2 < √8 < 3, da 4 < 8 < 9"}),
+   tText("Aufgabe 1c",1,"Gib an, zwischen welchen natürlichen Zahlen die Wurzel liegt:","9 < √85 < 10",{keywords:["9","10"], muster:"9 < √85 < 10, da 81 < 85 < 100"}),
+   tText("Aufgabe 2",3,"Mia behauptet: „Verdoppelt man die Seitenlänge eines Quadrats, verdoppelt sich auch der Flächeninhalt.“ Nimm begründet Stellung (Rechnung mit Beispiel).",
+     "Falsch: Der Flächeninhalt vervierfacht sich (z. B. 2 cm → 4 cm²; 4 cm → 16 cm²).",{checker:"kw", keywords:["falsch","vierfach","4"], muster:"Falsch. Beispiel: a = 2 cm → A = 4 cm²; 2a = 4 cm → A = 16 cm² = 4·4 cm². Der Flächeninhalt vervierfacht sich."}),
+   tRF("Aufgabe 3",2,"Kreuze an, ob die Aussagen wahr oder falsch sind.",[
+     {q:"(1) a² ≥ 0 für alle reellen a", correct:true},
+     {q:"(2) Die Quadratwurzel einer Quadratzahl ist immer ungerade", correct:false},
+     {q:"(3) Negative Basis + gerader Exponent → negative Potenz", correct:false}],{muster:"(1) wahr, (2) falsch (z. B. √16 = 4), (3) falsch (Potenz ist positiv)"}),
+   tText("Aufgabe 5",6,"Berechne den Radius r des Kreises mit dem Umfang u = 31,4 cm (π ≈ 3,14; 2 Nachkommastellen).",
+     "5",{keywords:["5","5.00","5,00"], muster:"r = u/(2π) = 31,4/6,28 = 5 cm", einheit:"cm"}),
+   tText("Aufgabe 6",4,"Rundes Blumenbeet, d = 7,5 m: Zeige rechnerisch, dass A = 44,18 m² (π ≈ 3,14).",
+     "r = 3,75; A = 3,14 · 3,75² = 44,18",{checker:"kw", keywords:["3,75","44,18"], muster:"r = 7,5/2 = 3,75 m; A = π·r² = 3,14 · 14,0625 = 44,18 m²"}),
+   tText("Aufgabe 7",6,"Berechte den Radius r für A = 50 cm² (r = √(A/π); 2 Nachkommastellen).",
+     "3,99",{keywords:["3.99","3,99"], muster:"r = √(50/3,14) = √15,92 ≈ 3,99 cm", einheit:"cm"}),
+   tText("Aufgabe 8",6,"Der Sekundenzeiger einer Turmuhr ist 1,2 m lang. Welche Strecke legt die Spitze in einer Minute zurück (π ≈ 3,14)?",
+     "7,54",{keywords:["7.54","7,54"], muster:"u = 2πr = 2 · 3,14 · 1,2 = 7,54 m", einheit:"m"}),
+   tText("Aufgabe 9a",2,"Pizza d = 25 cm, 2 cm breiter unbelegter Rand: Gesamtfläche der Pizza (π ≈ 3,14).",
+     "490,63",{keywords:["490.63","490,63"], muster:"A = π·12,5² = 490,63 cm²", einheit:"cm²"}),
+   tText("Aufgabe 9b",2,"Belegte Fläche (Radius 10,5 cm).",
+     "346,19",{keywords:["346.19","346,19"], muster:"A = π·10,5² = 346,19 cm²", einheit:"cm²"}),
+   tText("Aufgabe 9c",2,"Unbelegte Randfläche.",
+     "144,44",{keywords:["144.44","144,44"], muster:"490,63 − 346,19 = 144,44 cm²", einheit:"cm²"}),
+   tText("Aufgabe 9d",2,"Anteil der unbelegten Fläche in % (ganzzahlig).",
+     "29",{keywords:["29"], muster:"144,44/490,63 ≈ 0,294 → 29 %", einheit:"%"})
+  ];
+  return t;
+}
+const GENERATOREN = {genDaten, genGrund, genKreis, genBrueche, genSicherheit, genLichtbrechung, genCodes, genPotenzen};
+
+function genBrueche(kurs){
+  const t=[genFundMathe56()];
+  const B=(nr,p,frage,z,n,extra)=>{ const a=tBruch(nr,p,frage,z,n,Object.assign({okGeKuerzt:(gcd(z,n)>1)},extra||{})); t.push(a); return a; };
+  const az=()=>1+ri(5), an=()=>2+ri(6);
+  if(kurs==="EK"){
+    const a1z=az(),a1n=an(),a1b=1+ri(3);
+    B("Aufgabe 1",4,`Ein Wasserbecher fasst ${bruchText(a1z,a1n)} Liter. Wie viel Liter fassen ${a1b} gleiche Becher? (Rechenweg: Zähler mal Zähler, Nenner mal Nenner; vollständig kürzen.)`, a1z*a1b, a1n,{rechenweg:a1z+"·"+a1b+" / "+a1n});
+    const a2z=az(),a2n=an(),a2c=1+ri(5),a2d=2+ri(6);
+    B("Aufgabe 2",4,`Ein Seil der Länge ${bruchText(a2z,a2n)} m wird in Stücke von je ${bruchText(a2c,a2d)} m geschnitten. Wie viele Stücke ergeben sich? (Dividiere durch den Kehrbruch.)`, a2z*a2d, a2n*a2c,{rechenweg:a2z+"·"+a2d+" / "+a2n+"·"+a2c});
+    const f=3+ri(3), k1z=(1+ri(4))*f, k1n=(2+ri(5))*f;
+    B("Aufgabe 3",2,`Kürze vollständig und gib den vollständigen Rechenweg an (ggT bestimmen): ${bruchText(k1z,k1n)} = ?`, k1z/f, k1n/f,{rechenweg:"ggT("+k1z+","+k1n+") = "+f});
+    const m1a=az(),m1b=an(),m2a=az(),m2b=an(),m3a=az(),m3b=an();
+    const cz=m1a*m2a*m3a, cn=m1b*m2b*m3b, cg=gcd(cz,cn);
+    B("Aufgabe 4",4,`Kettenaufgabe: ${bruchText(m1a,m1b)} · ${bruchText(m2a,m2b)} · ${bruchText(m3a,m3b)} = ? (Erst alle Zähler und Nenner multiplizieren, dann vollständig kürzen.)`, cz/cg, cn/cg,{rechenweg:cz+"/"+cn+" gekürzt durch "+cg});
+    const e5=tText("Aufgabe 5",3,`Erkläre mit eigenen Worten: Warum darf man beim Multiplizieren von Brüchen einfach „Zähler mal Zähler, Nenner mal Nenner“ rechnen? Nenne dazu ein selbst gewähltes Beispiel.`,
+      "Erklärung mit Beispiel",{checker:"kw", keywords:["anteil","von","teil","beispiel","zähler","nenner"], muster:"z. B.: Ein Bruch ist ein Anteil – ein Bruchteil von einem Bruchteil = Zähler·Zähler / Nenner·Nenner."});
+    t.push(e5);
+    const ks=3+ri(5), ksg=1+ri(ks-1);
+    B("Aufgabe 6",4,`Eine Schokolade ist in ${ks} gleiche Stücke geteilt. Sara isst ${ksg} Stücke. a) Welcher Bruchteil ist gegessen? b) Welcher ist übrig? – Gib hier den ÜBRIGEN Bruchteil an.`, ks-ksg, ks,{rechenweg:ks+"−"+ksg+" von "+ks});
+    const rx=2+ri(3), rp=8+ri(4)*2, rg=gcd(rx*rp,4);
+    B("Aufgabe 7",5,`Rezept: Für 4 Personen braucht man ${rx} Tassen Mehl. a) Wie viele Tassen braucht man für ${rp} Personen? (Dreisatz mit Brüchen.) b) Begründe deinen Rechenweg in einem Satz.`, rx*rp/rg, 4/rg,{rechenweg:rx+" · "+rp+" / 4"});
+    const t1a=az(),t1b=an(),t2a=az(),t2b=an(), tz=t1a*t2b+t2a*t1b, tn=t1b*t2b, tg=gcd(tz,tn);
+    B("Aufgabe 8",5,`Tank: Ein Tank ist zu ${bruchText(t1a,t1b)} gefüllt. Zugefügt wird noch ${bruchText(t2a,t2b)}. a) Welcher Bruchteil ist gefüllt? (Gleichnamig machen, dann addieren.) b) Welcher Bruchteil fehlt zum vollen Tank? – Gib hier den GEFÜLLTEN Bruchteil an.`, tz/tg, tn/tg,{rechenweg:tz+"/"+tn});
+    const la=1+ri(3), lb=1+ri(2), lg=gcd(la*lb,2);
+    B("Aufgabe 9",5,`Laufstrecke: Lena läuft ${la} Runden à ${lb} km. Ihr Bruder läuft die Hälfte dieser Strecke. Wie viele km läuft der Bruder? (Erst Gesamtstrecke, dann halbieren.)`, la*lb/lg, 2/lg,{rechenweg:la+"·"+lb+" · 1/2"});
+    const gz=an()+3, gn=an();
+    const umB=tMulti("Aufgabe 10",4,`Unechte Brüche: Der Bruch ${bruchText(gz,gn)} ist unecht (Zähler ≥ Nenner). Schreibe ihn als gemischte Zahl.`,[
+      {label:"a)", hinweis:"Wie oft geht der Nenner in den Zähler hinein (ganze Zahl)?", loesung:Math.floor(gz/gn)},
+      {label:"b)", hinweis:"Welcher Restbruch bleibt übrig? Antworte im Format z/n.", loesung:(gz%gn)+"/"+gn}]);
+    t.push(umB);
+  } else {
+    const g1a=az(),g1b=an(),g1c=1+ri(4),g1d=2+ri(6);
+    B("Aufgabe 1",3,`Eine Flasche enthält ${bruchText(g1a,g1b)} l Saft. Wie viel Saft ist in ${g1c} solchen Flaschen? (Zähler mal Zähler, Nenner mal Nenner.)`, g1a*g1c, g1b);
+    const g2a=az(),g2b=an(),g2c=az(),g2d=an(),g2z=g2a*g2c,g2n=g2b*g2d,g2g=gcd(g2z,g2n);
+    B("Aufgabe 2",3,`Berechne und kürze vollständig: ${bruchText(g2a,g2b)} · ${bruchText(g2c,g2d)} = ?`, g2z/g2g, g2n/g2g,{rechenweg:g2z+"/"+g2n+" gekürzt durch "+g2g});
+    const f2=2+ri(3), k2z=(1+ri(4))*f2, k2n=(2+ri(5))*f2;
+    B("Aufgabe 3",2,`Kürze vollständig: ${bruchText(k2z,k2n)} = ?`, k2z/f2, k2n/f2);
+    const f3=3+ri(3), k3z=(2+ri(4))*f3, k3n=(3+ri(5))*f3;
+    B("Aufgabe 4",3,`Kürze vollständig – der ggT ist größer als 2: ${bruchText(k3z,k3n)} = ?`, k3z/f3, k3n/f3);
+    const d1a=az(),d1b=an(),d1c=1+ri(4),d1d=2+ri(6);
+    B("Aufgabe 5",4,`Berechne: ${bruchText(d1a,d1b)} : ${bruchText(d1c,d1d)} = ? (Mit dem Kehrbruch multiplizieren, dann kürzen.)`, d1a*d1d, d1b*d1c);
+    const v1a=az(),v1b=an();
+    B("Aufgabe 6",3,`Verdoppeln: ${bruchText(v1a,v1b)} · 2 = ? (Ergebnis als gekürzter Bruch.)`, v1a*2/gcd(v1a*2,v1b), v1b/gcd(v1a*2,v1b));
+    const ks2=3+ri(5), ksg2=1+ri(ks2-1);
+    B("Aufgabe 7",4,`Pizza: Eine Pizza ist in ${ks2} Stücke geteilt. Du isst ${ksg2} Stücke. a) Welcher Bruchteil ist gegessen? b) Welcher bleibt übrig? – Gib hier den GEGESSENEN Bruchteil an.`, ksg2, ks2);
+    const k8a=1+ri(4), k8b=3+ri(5), k8z=k8b-k8a;
+    B("Aufgabe 8",4,`Kuchen: Von einem Kuchen (${k8b} Stücke) sind ${k8a} Stücke schon weg. Welcher Bruchteil des Kuchens ist noch da?`, k8z, k8b);
+    const t9a=az(),t9b=an(),t9c=az(),t9d=an(), t9z=t9a*t9d+t9c*t9b, t9n=t9b*t9d, t9g=gcd(t9z,t9n);
+    B("Aufgabe 9",5,`Wasserkrug: Der Krug ist zu ${bruchText(t9a,t9b)} gefüllt. Du fügst ${bruchText(t9c,t9d)} hinzu. a) Gleichnamig machen: Bestimme den gefüllten Bruchteil. b) Wie viel fehlt noch zu 1? – Gib hier den GEFÜLLTEN Bruchteil an.`, t9z/t9g, t9n/t9g);
+    const gz2=an()+2, gn2=an();
+    t.push(tMulti("Aufgabe 10",4,`Gemischte Schreibweise: Schreibe den unechten Bruch ${bruchText(gz2,gn2)} als gemischte Zahl.`,[
+      {label:"a)", hinweis:"Ganze Zahl?", loesung:Math.floor(gz2/gn2)},
+      {label:"b)", hinweis:"Restbruch im Format z/n?", loesung:(gz2%gn2)+"/"+gn2}]));
+  }
+  return t;
+}
+GENERATOREN.genBrueche = genBrueche;
+
+function farbeFuer(proz){ return proz>=90?"b-dgruen":proz>=65?"b-gruen":proz>=45?"b-orange":proz>=15?"b-gelb":"b-rot"; }
+function gradeFuer(kurs, prozent){
+  const keys={ GK:[85,77,67,40,20], EK:[90,80,72,45,25], V:[87,78,70,42,22] };
+  const g=(keys[kurs]||keys.V).findIndex(gr=>prozent>=gr);
+  return g===-1 ? 6 : g+1;
+}
+function tendenz(note, prozent){
+  if(note>=6) return "6";
+  const keys={ GK:[85,77,67,40,20], EK:[90,80,72,45,25], V:[87,78,70,42,22] };
+  const grenzen={1:7,2:6,3:6,4:6,5:5};
+  const span=(keys[state.kurs]||keys.V);
+  const unter=note===5?span[4]:(note===4?span[3]:(note===3?span[2]:(note===2?span[1]:span[0])));
+  const abstand=prozent-unter;
+  if(abstand>=grenzen[note]) return note+"−";
+  if(abstand<=2) return note+"+";
+  return String(note);
+}
+function checkTask(a){
+  if(a.typ==="text"){
+    const raw=(a.antwort||"").trim();
+    if(!raw) return {proz:0, feedback:"Keine Eingabe."};
+    if(a.checker==="any") return {proz:100, feedback:"Eingabe vorhanden."};
+    if(typeof a.loesung==="number"){
+      const v=deNum(raw);
+      if(isNaN(v)) return {proz:0, feedback:"Keine gültige Zahl."};
+      if(Math.abs(v-a.loesung)<0.011) return {proz:100, feedback:"Endergebnis korrekt."};
+      return {proz:0, feedback:`Falsches Ergebnis. Richtig: ${a.loesung}${a.einheit?" "+a.einheit:""}.`};
+    }
+    if(a.checker==="liste"){
+      const arr=raw.split(",").map(x=>deNum(x)).filter(x=>!isNaN(x));
+      const ok=a.liste.length===arr.length && a.liste.every((v,i)=>Math.abs(v-arr[i])<0.011);
+      return ok?{proz:100, feedback:"Liste korrekt."}:{proz:0, feedback:"Liste nicht korrekt. Richtig: "+a.liste.join(", ")};
+    }
+    if(a.checker==="kw" || a.keywords){
+      const low=raw.toLowerCase();
+      const hit=(a.keywords||[]).some(k=>low.includes(k.toLowerCase()));
+      return hit?{proz:100, feedback:"Antwort enthält die erwarteten Schlüsselbegriffe."}
+                :{proz:0, feedback:"Antwort enthält keine erwarteten Schlüsselbegriffe. Musterlösung: "+a.muster};
+    }
+    if(lowEq(raw,a.loesung)) return {proz:100, feedback:"Endergebnis korrekt."};
+    return {proz:0, feedback:"Falsch. Richtig: "+a.muster};
+  }
+  if(a.typ==="multi"){
+    if(!Object.keys(a.antworten||{}).length) return {proz:0, feedback:"Nicht bearbeitet."};
+    let ok=0;
+    a.parts.forEach((pt,i)=>{
+      const raw=(a.antworten["p"+i]||"").trim();
+      if(!raw) return;
+      if(typeof pt.loesung==="number"){
+        const v=deNum(raw);
+        if(!isNaN(v)&&Math.abs(v-pt.loesung)<0.011) ok++;
+      } else if(pt.liste){
+        const arr=raw.split(",").map(x=>deNum(x)).filter(x=>!isNaN(x));
+        if(pt.liste.length===arr.length&&pt.liste.every((v,j)=>Math.abs(v-arr[j])<0.011)) ok++;
+      } else if(String(pt.loesung).includes("/")){
+        const a2=parseMixed(raw), b2=parseMixed(String(pt.loesung));
+        if(!isNaN(a2)&&!isNaN(b2)&&Math.abs(a2-b2)<1e-9) ok++;
+      } else {
+        const low=raw.toLowerCase();
+        const kws=pt.keywords||[pt.loesung];
+        if(kws.some(k=>low.includes(String(k).toLowerCase()))) ok++;
+      }
+    });
+    const proz=Math.round(ok/a.parts.length*100);
+    return {proz, feedback:`${ok} von ${a.parts.length} Teilfragen richtig. Muster: ${a.muster}`};
+  }
+  if(a.typ==="rf"){
+    let ok=0; const keys=Object.keys(a.antworten||{});
+    if(!keys.length) return {proz:0, feedback:"Nicht bearbeitet."};
+    a.items.forEach((it,i)=>{ const gegeben=a.antworten["rf"+i]; if((gegeben==="r")===it.correct) ok++; });
+    if(a.begruendung){
+      const grundOk=a.begruendungAntwort!=="" && Number(a.begruendungAntwort)===a.begruendung.correct;
+      const proz=Math.round((ok/a.items.length*100+(grundOk?100:0))/2);
+      return {proz,feedback:`Antwort: ${ok} von ${a.items.length} richtig; Begründung: ${grundOk?"richtig":"nicht richtig oder nicht ausgewählt"}. Muster: ${a.muster}`};
+    }
+    const proz=Math.round(ok/a.items.length*100);
+    return {proz, feedback:`${ok} von ${a.items.length} Aussagen richtig. Muster: ${a.muster}`};
+  }
+  if(a.typ==="mc"){
+    const gewaehlt=a.options.map((_,i)=>i).filter(i=>a.antworten["mc"+i]!==undefined);
+    if(!gewaehlt.length) return {proz:0, feedback:"Nicht bearbeitet."};
+    const corrSet=new Set(a.correct);
+    const treffer=gewaehlt.filter(i=>corrSet.has(i)).length;
+    const falsch=gewaehlt.length-treffer;
+    const antwortProz=Math.round(treffer/a.correct.length*100);
+    if(a.begruendung){
+      const grundOk=a.begruendungAntwort!=="" && Number(a.begruendungAntwort)===a.begruendung.correct;
+      const proz=Math.round((antwortProz+(grundOk?100:0))/2);
+      return {proz,feedback:`${treffer} von ${a.correct.length} richtigen Optionen getroffen${falsch?` (${falsch} falsche)`:""}; Begründung: ${grundOk?"richtig":"nicht richtig oder nicht ausgewählt"}. Muster: ${a.muster}`};
+    }
+    const proz=antwortProz;
+    const proTeil=formatPunkte(a.punkte/a.correct.length);
+    const erhalten=formatPunkte(a.punkte*proz/100);
+    return {proz, feedback:`${treffer} von ${a.correct.length} richtigen Optionen getroffen${falsch?` (${falsch} falsche)`:""} → ${erhalten} von ${a.punkte} Punkten (je richtige Option ${proTeil} P). Muster: ${a.muster}`};
+  }
+  if(a.typ==="luecke"){
+    const keys=Object.keys(a.antworten||{});
+    if(!keys.length) return {proz:0, feedback:"Nicht bearbeitet."};
+    let ok=0;
+    a.pairs.forEach((p,i)=>{ const gegeben=(a.antworten["l"+i]||"").trim().toLowerCase(); if(gegeben && (gegeben===p.answer.toLowerCase() || gegeben.includes(p.answer.toLowerCase()))) ok++; });
+    const proz=Math.round(ok/a.pairs.length*100);
+    return {proz, feedback:`${ok} von ${a.pairs.length} Lücken richtig. Muster: ${a.muster}`};
+  }
+  if(a.typ==="bruch"){
+    const an=a.antwort;
+    if(!an || (an.z===""&&an.n==="")) return {proz:0, feedback:"Nicht bearbeitet."};
+    const z=deNum(an.z), n=deNum(an.n);
+    if(isNaN(z)||isNaN(n)||n===0) return {proz:0, feedback:"Ungültige Brucheingabe."};
+    const wert=z/n, sol=a.z/a.n;
+    if(Math.abs(wert-sol)<1e-9){
+      const gekuerzt=gcd(Math.round(z),Math.round(n))===1 || (a.okGeKuerzt===false);
+      if(gekuerzt || !a.okGeKuerzt) return {proz:100, feedback:"Bruch korrekt."};
+      return {proz:85, feedback:"Wert richtig, nicht vollständig gekürzt (85 %). Muster: "+a.muster};
+    }
+    return {proz:0, feedback:`Falsch. Musterlösung: ${a.muster}${a.rechenweg?" (Weg: "+a.rechenweg+")":""}`};
+  }
+  return {proz:0, feedback:"Unbekannter Aufgabentyp."};
+}
+function lowEq(a,b){ return String(a).trim().toLowerCase()===String(b).trim().toLowerCase(); }
+
+const state = { name:"", fach:"", klasse:"", kurs:"", lzk:null, lzkName:"", aufgaben:[], testLaeuft:false, lehrer:false, restSek:0, timerId:null, zusaetzlich:0 };
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwoTwjjQTMyyzx6dO-yACDC4StbTpYyR8wcRyFlLiUXvUvcrqPDdQBlubIC2bst6XpWYQ/exec";
+const LS_LOCK="ltw_lock_v1", SS_DONE="ltw_done_v1";
+
+
+function lockGet(){ try{ return JSON.parse(localStorage.getItem(LS_LOCK))||{fails:0,until:0}; }catch(e){ return {fails:0,until:0}; } }
+function lockSet(o){ localStorage.setItem(LS_LOCK, JSON.stringify(o)); }
+function lockCheck(){
+  const L=lockGet(), now=Date.now();
+  if(L.until>now){ sperreAnzeigen(L.until); return false; }
+  if(L.until&&L.until<=now){ lockSet({fails:0,until:0}); }
+  $("pw").disabled=false;
+  return true;
+}
+function sperreAnzeigen(until){
+  $("pw").disabled=true;
+  const el=$("lock-hinweis"); el.style.display="block";
+  const tick=()=>{ const s=Math.ceil((until-Date.now())/1000);
+    if(s<=0){ el.style.display="none"; $("pw").disabled=false; return; }
+    el.textContent=`Zu viele Fehlversuche. Eingabe gesperrt für ${s} s.`; setTimeout(tick,250); };
+  tick();
+}
+let pwPruefungLaeuft=false;
+function pwPruefen(){
+  if(pwPruefungLaeuft || state.name) return;
+  const raw=$("pw").value.trim();
+  if(!raw) return;
+  pwPruefungLaeuft=true;
+  setTimeout(()=>{ pwPruefungLaeuft=false; },0);
+  
+  if(raw===LEHRER.pw){
+    state.lehrer=true; state.name=LEHRER.name;
+    lockSet({fails:0,until:0});
+    $("pw").value="######"; $("pw").disabled=true;
+    $("pw-status").textContent="Lehrerzugang: Vorschau-Modus – alle Arbeiten aller Klassen verfügbar.";
+    $("f-name").classList.add("rahmen-rot");
+    lehrerFelder(); return;
+  }
+  const treffer=SCHUELER.filter(s=>s[0]===raw);
+  if(treffer.length){
+    lockSet({fails:0,until:0});
+    state.name=treffer[0][1];
+    $("pw").value="******"; $("pw").disabled=true;
+    $("pw-status").textContent="Anmeldung erfolgreich.";
+    $("f-name").classList.add("rahmen-gruen");
+    schuelerFelder(treffer);
+  } else {
+    const L=lockGet();
+    if(L.until>Date.now()) return;
+    L.fails=(L.fails||0)+1;
+    if(L.fails>=3){
+      const dauer=15*Math.pow(2,L.fails-3)*1000;
+      L.until=Date.now()+dauer;
+    }
+    lockSet(L);
+    $("pw-status").textContent="Passwort nicht bekannt. Fehlversuch "+L.fails+".";
+    $("pw").value="";
+    if(L.until) sperreAnzeigen(L.until);
+  }
+}
+function setField(id,val,disabled=true){
+  const el=$(id); el.value=val; el.disabled=disabled;
+  if(id==="f-kurs"){ el.className=val==="EK"?"kurs-ek":val==="GK"?"kurs-gk":"kurs-v"; }
+}
+function lehrerFelder(){
+  setField("f-name","HAR");
+  setField("f-fach","--"); setField("f-klasse","--"); setField("f-kurs","--");
+  state.fach="--"; state.klasse="--"; state.kurs="--";
+  lehrerFeldenOptions();
+}
+const SOON_MS=48*3600*1000;
+function lzkStatus(l,now){
+  const fr=parseDT(l.freigabe),ab=parseDT(l.ablauf);
+  if(ab&&now>ab) return "abgelaufen";
+  if(fr&&now<fr) return "spaeter";
+  if(ab&&(ab-now)<SOON_MS) return "soon";
+  return "frei";
+}
+function lzkOption(kEl,l,now,gesperrt){
+  const f=l.freigabe?fmtDT(l.freigabe):"sofort";
+  const ab=l.ablauf?fmtDT(l.ablauf):"dauerhaft";
+  const opt=new Option((gesperrt?"\uD83D\uDD12 ":"")+l.name+"  \u2013  Freigabe: "+f+"  \u2013  Ablauf: "+ab, l.id);
+  opt.className=lzkStatus(l,now);
+  if(gesperrt) opt.disabled=true;
+  kEl.add(opt);
+  return opt;
+}
+function lzkSelectFarbe(){
+  const kEl=$("f-lzk");
+  const opt=kEl.options[kEl.selectedIndex];
+  kEl.classList.remove("sel-frei","sel-soon","sel-abgelaufen");
+  if(!opt) return;
+  if(opt.className.indexOf("soon")>-1) kEl.classList.add("sel-soon");
+  else if(opt.className.indexOf("abgelaufen")>-1) kEl.classList.add("sel-abgelaufen");
+  else if(opt.className.indexOf("frei")>-1) kEl.classList.add("sel-frei");
+}
+function lzkSortiert(liste,now){
+  const freie=[],spaeter=[],abgel=[];
+  liste.forEach(l=>{ const s=lzkStatus(l,now);
+    if(s==="abgelaufen") abgel.push(l);
+    else if(s==="spaeter") spaeter.push(l);
+    else freie.push(l); });
+  abgel.sort((a,b)=>parseDT(a.ablauf)-parseDT(b.ablauf));
+  return [...freie,...spaeter,...abgel];
+}
+function lehrerFeldenOptions(){
+  const kEl=$("f-lzk"); kEl.disabled=false; kEl.innerHTML="";
+  const now=berlinNow();
+  lzkSortiert([...LZKS],now).forEach(l=>{ lzkOption(kEl,l,now,false); });
+  kEl.onchange=()=>{
+    const l=LZKS.find(x=>x.id===kEl.value);
+    state.lzkName=l?l.name:"";
+    lzkSelectFarbe();
+    updateStart();
+  };
+  kEl.onchange();
+}
+function schuelerFelder(treffer){
+  setField("f-name",state.name);
+  const fEl=$("f-fach"); fEl.disabled=false; fEl.innerHTML="";
+  const faecher=[...new Set(treffer.map(t=>t[2]))];
+  faecher.forEach(f=>fEl.add(new Option(f,f)));
+  if(faecher.length===1){ fEl.value=faecher[0]; fEl.disabled=true; }
+  fEl.onchange=()=>schuelerFelder2(treffer);
+  schuelerFelder2(treffer);
+}
+function schuelerFelder2(treffer){
+  const fach=$("f-fach").value;
+  const row=treffer.find(t=>t[2]===fach)||treffer[0];
+  setField("f-klasse",row[3]); setField("f-kurs",row[4]);
+  state.fach=row[2]; state.klasse=row[3]; state.kurs=row[4];
+  const kEl=$("f-lzk"); kEl.disabled=false; kEl.innerHTML="";
+  const now=berlinNow();
+  const liste=LZKS.filter(l=>l.klasse.split("/").includes(state.klasse) && l.fach===state.fach && (l.kurs==="*"||l.kurs===state.kurs));
+  lzkSortiert(liste,now).forEach(l=>{ lzkOption(kEl,l,now,lzkStatus(l,now)!=="frei"&&lzkStatus(l,now)!=="soon"); });
+  if(!liste.length) kEl.add(new Option("(keine Arbeit verfügbar)","",true,true));
+  const nameFuer=id=>{ const l=LZKS.find(x=>x.id===id); return l?l.name:""; };
+  state.lzkName=kEl.value?nameFuer(kEl.value):"";
+  kEl.onchange=()=>{ state.lzkName=nameFuer(kEl.value); lzkSelectFarbe(); updateStart(); };
+  lzkSelectFarbe();
+  updateStart();
+}
+function verfuegbar(l, now){
+  const fr=parseDT(l.freigabe), ab=parseDT(l.ablauf);
+  if(fr&&now<fr) return false;
+  if(ab&&now>ab) return false;
+  return true;
+}
+function updateStart(){
+  const ok = state.name && state.fach && state.klasse && state.kurs && $("f-lzk").value && !$("f-lzk").options[$("f-lzk").selectedIndex].disabled;
+  $("btn-start").disabled=!ok;
+  $("start-hinweis").style.display="none";
+}
+
+
+$("btn-start").addEventListener("click", ()=>{
+  if($("btn-start").disabled){ $("start-hinweis").style.display="block"; $("start-hinweis").textContent="Bitte erst alle Felder vollständig auswählen."; return; }
+  try{
+    const lzk=LZKS.find(l=>l.id===$("f-lzk").value);
+    state.lzk=lzk;
+    state.lzkName=lzk.name;
+    if(state.lehrer){
+      state.klasse=lzk.klasse;
+      state.kurs=(lzk.kurs==="*") ? "EK" : lzk.kurs;
+    } else {
+      state.kurs = lzk.kurs==="*" ? state.kurs : lzk.kurs;
+      setField("f-kurs",state.kurs);
+    }
+    const gen=GENERATOREN[lzk.gen];
+    state.aufgaben=gen(state.kurs);
+    if(!state.lehrer) shuffle(state.aufgaben);
+    $("login").style.display="none";
+    $("test").style.display="block";
+    $("test-info").innerHTML=`<b>${state.name}</b> / ${state.fach} / ${state.klasse}(${state.kurs})<br><b>${state.lzkName}</b>`;
+    renderAufgaben();
+    $("uebungs-tools").style.display=lzk.interaktiv?"block":"none";
+    if(lzk.interaktiv) updateLichtProgress();
+    if(state.lehrer){
+      const sel=document.createElement("select");
+      sel.id="sprachwahl"; sel.style.maxWidth="340px"; sel.style.marginTop="8px";
+      [["","Übersetzungsprüfung: Original"],["en","English – Ansicht wie Shutcha (6C)"],["es","Español – Ansicht wie Hertrampf (7F)"]].forEach(o=>sel.add(new Option(o[1],o[0])));
+      sel.onchange=()=>{ state.forceSprache=sel.value||null; renderAufgaben(); };
+      $("test-info").appendChild(document.createElement("br"));
+      $("test-info").appendChild(sel);
+    }
+    state.testLaeuft=true;
+    if(!state.lehrer) startCountdown(lzk);
+    else $("countbar").style.display="none";
+    window.scrollTo(0,0);
+  }catch(err){
+    console.error(err);
+    state.testLaeuft=false;
+    $("test").style.display="none";
+    $("login").style.display="block";
+    showToast("Fehler beim Start: "+err.message, 5000);
+  }
+});
+
+
+function begruendungHtml(a,idx,sprache){
+  if(!a.begruendung) return "";
+  const lbl=sprache==="es"?o=>{const t=esText(o);return t===o?o:o+" – "+t;}:o=>o;
+  return `<div class="begruendung-wrap" id="bw${idx}" hidden><label for="bg${idx}">Wähle eine passende Begründung</label>${sprache==="es"?`<div class="opt-tr" style="margin:2px 0 8px">Elige una explicación:</div>`:""}<select id="bg${idx}"><option value="">Bitte auswählen</option>${a.begruendung.options.map((o,i)=>`<option value="${i}">${lbl(o)}</option>`).join("")}</select></div>`;
+}
+
+const ES_TEXT={
+"Er wird zum Lot hin gebrochen.":"Se desv\u00eda hacia la normal.",
+"Er wird vom Lot weg gebrochen.":"Se desv\u00eda alej\u00e1ndose de la normal.",
+"Er verl\u00e4uft ohne jede Richtungs\u00e4nderung weiter.":"Contin\u00faa sin cambio de direcci\u00f3n.",
+"Er wird an der Oberfl\u00e4che vollst\u00e4ndig reflektiert.":"Se refleja completamente en la superficie.",
+"Der Brechungswinkel zum Lot ist im Glas kleiner als der Einfallswinkel in Luft.":"El \u00e1ngulo de refracci\u00f3n respecto a la normal es menor en el vidrio que el \u00e1ngulo de incidencia en el aire.",
+"Das Lot steht parallel zur Glasoberfl\u00e4che.":"La normal es paralela a la superficie del vidrio.",
+"Der Strahl kehrt immer in die Optikleuchte zur\u00fcck.":"El rayo siempre vuelve a la linterna \u00f3ptica.",
+"Der Einfallswinkel wird zwischen dem einfallenden Strahl und dem Lot gemessen.":"El \u00e1ngulo de incidencia se mide entre el rayo incidente y la normal.",
+"Das Lot steht senkrecht auf der Grenzfl\u00e4che und ist die gemeinsame Bezugslinie.":"La normal es perpendicular a la superficie de separaci\u00f3n y es la l\u00ednea de referencia com\u00fan.",
+"Die Grenzfl\u00e4che selbst ist immer die Bezugslinie f\u00fcr beide Winkel.":"La superficie de separaci\u00f3n es siempre la l\u00ednea de referencia para ambos \u00e1ngulos.",
+"Der Winkel wird zwischen Optikleuchte und Glask\u00f6rper gemessen.":"El \u00e1ngulo se mide entre la linterna \u00f3ptica y el cuerpo de vidrio.",
+"Optikleuchte":"linterna \u00f3ptica","Winkelscheibe":"disco de \u00e1ngulos","halbkreisf\u00f6rmige Glask\u00f6rper":"cuerpo de vidrio semicircular","Lot":"la normal","Bunsenbrenner":"mechero Bunsen","Stoppuhr":"cron\u00f3metro",
+"Trifft der Strahl radial auf die gekr\u00fcmmte Fl\u00e4che, verl\u00e4sst er das Glas dort ohne Richtungs\u00e4nderung.":"Si el rayo llega de forma radial a la superficie curva, sale del vidrio all\u00ed sin cambio de direcci\u00f3n.",
+"Die gekr\u00fcmmte Fl\u00e4che verst\u00e4rkt den Lichtstrahl.":"La superficie curva amplifica el rayo de luz.",
+"Der Glask\u00f6rper verhindert jede Reflexion an der geraden Fl\u00e4che.":"El cuerpo de vidrio evita toda reflexi\u00f3n en la superficie plana.",
+"Die Winkelscheibe wird dadurch \u00fcberfl\u00fcssig.":"As\u00ed el disco de \u00e1ngulos resulta innecesario.",
+"Der radiale Strahl trifft senkrecht auf die gekr\u00fcmmte Grenzfl\u00e4che.":"El rayo radial incide perpendicularmente sobre la superficie curva de separaci\u00f3n.",
+"Ein radialer Strahl trifft immer parallel zur gekr\u00fcmmten Grenzfl\u00e4che.":"Un rayo radial siempre incide paralelo a la superficie curva de separaci\u00f3n.",
+"Glas kann Licht nur an gekr\u00fcmmten Fl\u00e4chen brechen.":"El vidrio solo puede refractar la luz en superficies curvas.",
+"Bei schr\u00e4gem Einfall ist der Brechungswinkel jeweils kleiner als der Einfallswinkel.":"Con incidencia inclinada, el \u00e1ngulo de refracci\u00f3n es siempre menor que el \u00e1ngulo de incidencia.",
+"Der Brechungswinkel ist stets genau halb so gro\u00df wie der Einfallswinkel.":"El \u00e1ngulo de refracci\u00f3n es siempre exactamente la mitad del \u00e1ngulo de incidencia.",
+"Mit gr\u00f6\u00dfer werdendem Einfallswinkel wird auch der Brechungswinkel gr\u00f6\u00dfer.":"A medida que aumenta el \u00e1ngulo de incidencia, aumenta tambi\u00e9n el \u00e1ngulo de refracci\u00f3n.",
+"Bei 45\u00b0 bleibt der Winkel unver\u00e4ndert.":"A 45\u00b0 el \u00e1ngulo no cambia.",
+"Der zeilenweise Vergleich zeigt kleinere Brechungswinkel und gleichsinnige \u00c4nderungen.":"La comparaci\u00f3n fila a fila muestra \u00e1ngulos de refracci\u00f3n menores y cambios en el mismo sentido.",
+"Nur die erste Tabellenzeile entscheidet \u00fcber alle Messwerte.":"Solo la primera fila de la tabla decide sobre todos los valores medidos.",
+"Die Differenz der beiden Winkel ist in jeder Zeile gleich.":"La diferencia entre ambos \u00e1ngulos es igual en cada fila.",
+"Wird der Einfallswinkel von 30\u00b0 auf 60\u00b0 verdoppelt, betr\u00e4gt der Brechungswinkel 40\u00b0.":"Si el \u00e1ngulo de incidencia se duplica de 30\u00b0 a 60\u00b0, el \u00e1ngulo de refracci\u00f3n es 40\u00b0.",
+"In der Tabelle geh\u00f6ren zu 60\u00b0 genau 35\u00b0 als Brechungswinkel.":"En la tabla, a 60\u00b0 corresponden exactamente 35\u00b0 como \u00e1ngulo de refracci\u00f3n.",
+"Brechungswinkel und Einfallswinkel verdoppeln sich immer gemeinsam.":"El \u00e1ngulo de refracci\u00f3n y el de incidencia siempre se duplican juntos.",
+"Der Brechungswinkel bleibt bei jeder \u00c4nderung konstant.":"El \u00e1ngulo de refracci\u00f3n se mantiene constante ante cualquier cambio.",
+"kleiner":"menor","gr\u00f6\u00dfer":"mayor","gleich gro\u00df":"igual","15\u00b0":"15\u00b0","30\u00b0":"30\u00b0","35\u00b0":"35\u00b0",
+"Vergleich 1":"Comparaci\u00f3n 1","Vergleich 2":"Comparaci\u00f3n 2","\u00c4nderung":"Aumento",
+"Sie hat die falsche Bezugslinie benutzt; zum Lot betr\u00e4gt der Einfallswinkel 30\u00b0.":"Ha usado la l\u00ednea de referencia equivocada; respecto a la normal, el \u00e1ngulo de incidencia es 30\u00b0.",
+"Der Einfallswinkel betr\u00e4gt ebenfalls 60\u00b0, denn die Bezugslinie ist frei w\u00e4hlbar.":"El \u00e1ngulo de incidencia tambi\u00e9n es 60\u00b0, porque la l\u00ednea de referencia se puede elegir libremente.",
+"Der richtige Einfallswinkel betr\u00e4gt 120\u00b0.":"El \u00e1ngulo de incidencia correcto es 120\u00b0.",
+"Ein Einfallswinkel kann nur an der gekr\u00fcmmten Fl\u00e4che gemessen werden.":"El \u00e1ngulo de incidencia solo se puede medir en la superficie curva.",
+"Oberfl\u00e4che und Lot stehen senkrecht zueinander; 90\u00b0 \u2212 60\u00b0 = 30\u00b0.":"La superficie y la normal son perpendiculares; 90\u00b0 \u2212 60\u00b0 = 30\u00b0.",
+"Oberfl\u00e4che und Lot sind dieselbe Linie.":"La superficie y la normal son la misma l\u00ednea.",
+"Winkel zur Oberfl\u00e4che werden immer verdoppelt.":"Los \u00e1ngulos respecto a la superficie siempre se duplican.",
+"Fragestellung und Versuchsaufbau":"planteamiento y montaje","Durchf\u00fchrung":"realizaci\u00f3n","Beobachtungen und Messwerte":"observaciones y medidas","Auswertung und Erkl\u00e4rung":"an\u00e1lisis y explicaci\u00f3n","Beliebige Vermutung ohne Versuch":"suposici\u00f3n sin experimento",
+"Bei einem Einfallswinkel von 30\u00b0 wurde ein Brechungswinkel von 20\u00b0 gemessen.":"Con un \u00e1ngulo de incidencia de 30\u00b0 se midi\u00f3 un \u00e1ngulo de refracci\u00f3n de 20\u00b0.",
+"Das Licht \u00e4ndert seine Richtung, weil es in ein anderes Material eintritt.":"La luz cambia de direcci\u00f3n porque entra en otro material.",
+"Der Versuch zeigt, dass Licht zum Lot hin gebrochen wird.":"El experimento muestra que la luz se desv\u00eda hacia la normal.",
+"Der Zusammenhang der Winkel l\u00e4sst sich mit der Ausbreitung des Lichts erkl\u00e4ren.":"La relaci\u00f3n entre los \u00e1ngulos se puede explicar con la propagaci\u00f3n de la luz.",
+"Der Satz berichtet nur einen abgelesenen Messwert, ohne ihn zu deuten.":"La frase solo informa de un valor medido, sin interpretarlo.",
+"Der Satz enth\u00e4lt eine Ursache und geh\u00f6rt deshalb zur Erkl\u00e4rung.":"La frase contiene una causa y por eso pertenece a la explicaci\u00f3n.",
+"Jede Aussage mit einer Zahl ist automatisch eine Erkl\u00e4rung.":"Toda afirmaci\u00f3n con un n\u00famero es autom\u00e1ticamente una explicaci\u00f3n.",
+"Bei wiederholten Messungen deutlich abweichende Werte m\u00fcssen nicht auf Ablesefehler gepr\u00fcft werden.":"Las medidas repetidas con diferencias claras no necesitan revisarse para detectar errores de lectura.",
+"Kontrolle und Wiederholung helfen, Ablesefehler und Aufbaufehler zu erkennen.":"El control y la repetici\u00f3n ayudan a detectar errores de lectura y de montaje.",
+"Die zuerst notierte Zahl ist immer die genaueste.":"El primer n\u00famero anotado siempre es el m\u00e1s exacto.",
+"Abweichungen beweisen automatisch ein neues physikalisches Gesetz.":"Las desviaciones demuestran autom\u00e1ticamente una nueva ley f\u00edsica.",
+"Beim schr\u00e4gen \u00dcbergang von Luft in Glas wird der Strahl zum Lot hin gebrochen.":"En el paso inclinado del aire al vidrio, el rayo se desv\u00eda hacia la normal.",
+"Gr\u00f6\u00dfere Einfallswinkel f\u00fchren hier zu gr\u00f6\u00dferen Brechungswinkeln.":"Aqu\u00ed, \u00e1ngulos de incidencia mayores producen \u00e1ngulos de refracci\u00f3n mayores.",
+"Einfallswinkel und Brechungswinkel sind immer proportional.":"El \u00e1ngulo de incidencia y el de refracci\u00f3n son siempre proporcionales.",
+"Ein radial auf die gekr\u00fcmmte Fl\u00e4che treffender Strahl wird dort nicht umgelenkt.":"Un rayo que incide radialmente sobre la superficie curva no se desv\u00eda all\u00ed.",
+"Beim Eintritt in Glas wird Licht stets vom Lot weg gebrochen.":"Al entrar en el vidrio, la luz siempre se desv\u00eda alej\u00e1ndose de la normal.",
+"Die Strahlbeobachtung, die Tabellenwerte und der radiale Verlauf st\u00fctzen genau diese drei Aussagen.":"La observaci\u00f3n del rayo, los valores de la tabla y el recorrido radial apoyan exactamente estas tres afirmaciones.",
+"Eine Proportionalit\u00e4t folgt bereits aus einem einzigen Messwertpaar.":"Una proporcionalidad ya se deduce de un \u00fanico par de valores medidos.",
+"Jede Grenzfl\u00e4che lenkt Licht in dieselbe Richtung ab.":"Toda superficie de separaci\u00f3n desv\u00eda la luz en la misma direcci\u00f3n."
+};
+function esText(s){ return ES_TEXT[s]||s; }
+function renderAufgaben(){
+  const fb=FOERDER[state.name]||{};
+  let sprache=fb.se||null;
+  if(state.lehrer && state.forceSprache) sprache=state.forceSprache;
+  const wrap=$("aufgaben"); wrap.innerHTML="";
+  state.aufgaben.forEach((a,idx)=>{
+    const tr=(sprache && a[sprache]) ? a[sprache] : null;
+    const optTr=s=>{ if(sprache!=="es") return ""; const t=esText(s); return t===s?"":`<span class="opt-tr">${t}</span>`; };
+    const div=document.createElement("div");
+    div.className="aufgabe glass";
+    div.dataset.idx=idx;
+    let inner=`<div class="head">${a.nr} (${a.punkte}P)</div><div class="frage">${a.frage}</div>`;
+    if(tr){
+      let th=`<div class="uebersetzung"><b>${sprache==="en"?"English:":"Español:"}</b> ${stripHTML(tr.frage)}`;
+      if(sprache==="es" && a.typ==="luecke"){
+        th+=`<div class="tr-sub"><b>Banco de palabras:</b> ${a.bank.map(w=>esText(w)).join(" – ")}</div>`;
+        if(a.pairs) th+=`<ul class="tr-list">${a.pairs.map(p=>`<li>${esText(p.blank)}</li>`).join("")}</ul>`;
+      }
+      th+=`</div>`;
+      inner+=th;
+    }
+    if(a.typ==="text"){
+      inner+=`<input type="text" class="input-attention" id="a${idx}" placeholder="Antwort${a.einheit?" ("+a.einheit+")":""}">`;
+    } else if(a.typ==="rf"){
+      inner+=`<table class="opts"><tr><th>Aussage</th><th>${a.jaNein?"Ja":"richtig"}</th><th>${a.jaNein?"Nein":"falsch"}</th></tr>`+
+        a.items.map((it,i)=>`<tr><td>${it.q}${optTr(it.q)}</td><td style="text-align:center"><input type="radio" name="rf${idx}_${i}" value="r" aria-label="${a.jaNein?"Ja":"richtig"}"></td><td style="text-align:center"><input type="radio" name="rf${idx}_${i}" value="f" aria-label="${a.jaNein?"Nein":"falsch"}"></td></tr>`).join("")+`</table>`+begruendungHtml(a,idx,sprache);
+    } else if(a.typ==="mc"){
+      const typStr=a.single?"radio":"checkbox";
+      inner+=`<table class="opts"><tr><th>Antwortmöglichkeiten${a.single?" (genau eine Antwort)":""}</th></tr>`+
+        a.options.map((o,i)=>`<tr><td><label style="display:flex;gap:8px;margin:0;align-items:center;font-weight:400"><input type="${typStr}" name="mcg${idx}" id="mc${idx}_${i}"><span>${o}${optTr(o)}</span></label></td></tr>`).join("")+`</table>`+begruendungHtml(a,idx,sprache);
+    } else if(a.typ==="luecke"){
+      if(a.auswahl){
+        inner+=`<div class="chip-bank" aria-label="Wortbank">${a.bank.map(w=>`<span class="chip" data-w="${String(w).replace(/"/g,"&quot;")}">${w}</span>`).join(" ")}<span class="chip-hint">Wort in die Lücke ziehen – oder antippen</span></div>`;
+        inner+=a.pairs.map((p,i)=>{
+          return `<label style="margin-top:10px">${p.blank}</label><div class="slot input-attention" id="slot${idx}_${i}" data-slot="${idx}_${i}">Hierher ziehen</div><select id="l${idx}_${i}" style="display:none"><option value=""></option>${a.bank.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>`;
+        }).join("");
+      } else {
+        inner+=`<div class="luecke-bank">Wortbank (vermischt): ${a.bank.join(" – ")}</div>`;
+        inner+=a.pairs.map((p,i)=>{
+          const label=`<label for="l${idx}_${i}" style="margin-top:6px">${p.blank}</label>`;
+          return label+`<input type="text" class="input-attention" id="l${idx}_${i}">`;
+        }).join("");
+      }
+    } else if(a.typ==="multi"){
+      inner+=a.parts.map((pt,i)=>`<label style="margin-top:6px">${pt.label}${pt.hinweis?" – "+pt.hinweis:""}${optTr(pt.hinweis||"")}</label><input type="text" class="input-attention" id="m${idx}_${i}">`).join("");
+    } else if(a.typ==="bruch"){
+      inner+=`<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <input type="text" class="input-attention" id="bz${idx}" style="width:80px;text-align:center" placeholder="Zähler">
+        <span style="font-size:1.6rem;font-weight:700">⁄</span>
+        <input type="text" class="input-attention" id="bn${idx}" style="width:80px;text-align:center" placeholder="Nenner"></div>`;
+    }
+    if(state.lzk && state.lzk.interaktiv) inner+=`<div class="selbst-feedback" id="sf${idx}" role="status" aria-live="polite"></div>`;
+    div.innerHTML=inner;
+    wrap.appendChild(div);
+  });
+}
+$("aufgaben").addEventListener("input", e=>{
+  const t=e.target;
+  if(t.classList&&t.classList.contains("input-attention")) t.classList.toggle("input-attention",!(t.value||"").trim());
+});
+$("aufgaben").addEventListener("change", e=>{
+  const t=e.target;
+  if(t.tagName==="SELECT"&&t.classList&&t.classList.contains("input-attention")&&(t.value||"")!=="") t.classList.remove("input-attention");
+});
+
+/* ---------- Lückentext: Drag & Drop (Maus, Finger, Stift) ---------- */
+let dragState=null, justDragged=false;
+$("aufgaben").addEventListener("pointerdown", e=>{
+  const chip=e.target.closest(".chip");
+  if(!chip||chip.classList.contains("used")) return;
+  if(e.pointerType==="mouse"&&e.button!==0) return;
+  dragState={chip,x0:e.clientX,y0:e.clientY,moved:false,ghost:null,pid:e.pointerId};
+  try{ chip.setPointerCapture(e.pointerId); }catch(_){}
+});
+$("aufgaben").addEventListener("pointermove", e=>{
+  if(!dragState||e.pointerId!==dragState.pid) return;
+  const dx=e.clientX-dragState.x0, dy=e.clientY-dragState.y0;
+  if(!dragState.moved&&Math.hypot(dx,dy)>7){
+    dragState.moved=true;
+    const g=dragState.chip.cloneNode(true);
+    g.className="chip chip-ghost";
+    g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px";
+    document.body.appendChild(g);
+    dragState.ghost=g;
+  }
+  if(dragState.moved&&dragState.ghost){
+    dragState.ghost.style.left=e.clientX+"px";
+    dragState.ghost.style.top=e.clientY+"px";
+    document.querySelectorAll(".slot.hover").forEach(s=>s.classList.remove("hover"));
+    const t=document.elementFromPoint(e.clientX,e.clientY);
+    const slot=t&&t.closest?t.closest(".slot"):null;
+    if(slot) slot.classList.add("hover");
+  }
+});
+$("aufgaben").addEventListener("pointerup", e=>{
+  if(!dragState||e.pointerId!==dragState.pid) return;
+  const d=dragState; dragState=null;
+  document.querySelectorAll(".slot.hover").forEach(s=>s.classList.remove("hover"));
+  let slot=null;
+  if(d.moved){
+    const t=document.elementFromPoint(e.clientX,e.clientY);
+    slot=t&&t.closest?t.closest(".slot"):null;
+    if(d.ghost) d.ghost.remove();
+    justDragged=true; setTimeout(()=>{justDragged=false;},0);
+  }
+  if(slot){ lueckeSetzen(d.chip,slot); }
+  else if(!d.moved){
+    const card=d.chip.closest(".aufgabe");
+    const frei=card&&card.querySelector(".slot:not(.filled)");
+    if(frei) lueckeSetzen(d.chip,frei);
+  }
+});
+$("aufgaben").addEventListener("pointercancel", e=>{
+  if(dragState&&e.pointerId===dragState.pid){
+    if(dragState.ghost) dragState.ghost.remove();
+    dragState=null;
+    document.querySelectorAll(".slot.hover").forEach(s=>s.classList.remove("hover"));
+  }
+});
+$("aufgaben").addEventListener("click", e=>{
+  if(justDragged) return;
+  const slot=e.target.closest(".slot");
+  if(slot&&slot.classList.contains("filled")) lueckeFreigeben(slot);
+});
+function lueckeSetzen(chip,slot){
+  const sel=document.getElementById("l"+slot.dataset.slot);
+  if(!sel) return;
+  const neu=chip.dataset.w, alt=sel.value;
+  if(alt===neu) return;
+  if(alt) lueckeFreigeben(slot,true);
+  sel.value=neu;
+  slot.textContent=neu;
+  slot.classList.add("filled");
+  slot.classList.remove("input-attention");
+  chip.classList.add("used");
+  sel.dispatchEvent(new Event("change",{bubbles:true}));
+}
+function lueckeFreigeben(slot,silent){
+  const sel=document.getElementById("l"+slot.dataset.slot);
+  const wort=sel?sel.value:"";
+  if(sel) sel.value="";
+  slot.textContent="Hierher ziehen";
+  slot.classList.remove("filled");
+  slot.classList.add("input-attention");
+  if(wort){
+    const card=slot.closest(".aufgabe");
+    const chip=card&&card.querySelector('.chip[data-w="'+CSS.escape(wort)+'"]');
+    if(chip) chip.classList.remove("used");
+  }
+  if(!silent&&sel) sel.dispatchEvent(new Event("change",{bubbles:true}));
+}
+function sammleAntworten(){
+  state.aufgaben.forEach((a,idx)=>{
+    if(a.typ==="text") a.antwort=($("a"+idx)||{}).value||"";
+    else if(a.typ==="rf"){ a.antworten={}; a.items.forEach((_,i)=>{ const r=document.querySelector(`input[name=rf${idx}_${i}]:checked`); if(r) a.antworten["rf"+i]=r.value; }); if(a.begruendung) a.begruendungAntwort=($("bg"+idx)||{}).value||""; }
+    else if(a.typ==="mc"){ a.antworten={}; a.options.forEach((_,i)=>{ const c=$("mc"+idx+"_"+i); if(c&&c.checked) a.antworten["mc"+i]=i; }); if(a.begruendung) a.begruendungAntwort=($("bg"+idx)||{}).value||""; }
+    else if(a.typ==="luecke"){ a.antworten={}; a.pairs.forEach((_,i)=>{ a.antworten["l"+i]=($("l"+idx+"_"+i)||{}).value||""; }); }
+    else if(a.typ==="multi"){ a.antworten={}; a.parts.forEach((_,i)=>{ a.antworten["p"+i]=($("m"+idx+"_"+i)||{}).value||""; }); }
+    else if(a.typ==="bruch"){ a.antwort={z:($("bz"+idx)||{}).value||"", n:($("bn"+idx)||{}).value||""}; }
+  });
+}
+
+function lichtAufgabeFertig(a){
+  if(a.typ==="mc") return Object.keys(a.antworten||{}).length>0 && (!a.begruendung || (a.begruendungAntwort||"")!=="");
+  if(a.typ==="rf") return a.items.every((_,i)=>(a.antworten||{})["rf"+i]!==undefined) && (!a.begruendung || (a.begruendungAntwort||"")!=="");
+  if(a.typ==="luecke") return a.pairs.every((_,i)=>((a.antworten||{})["l"+i]||"")!=="");
+  return false;
+}
+function updateLichtProgress(){
+  if(!state.lzk || !state.lzk.interaktiv) return;
+  sammleAntworten();
+  const fertig=state.aufgaben.filter(lichtAufgabeFertig).length;
+  const gesamt=state.aufgaben.length;
+  const proz=gesamt?Math.round(fertig/gesamt*100):0;
+  $("fortschritt-text").textContent=`${fertig} von ${gesamt} Aufgaben vollständig beantwortet`;
+  $("fortschritt-fill").style.width=proz+"%";
+  const spur=document.querySelector(".fortschritt-spur");
+  spur.setAttribute("aria-valuemax",gesamt); spur.setAttribute("aria-valuenow",fertig);
+}
+function aktualisiereBegruendung(idx){
+  const a=state.aufgaben[idx], box=$("bw"+idx);
+  if(!a || !a.begruendung || !box) return;
+  let beantwortet=false;
+  if(a.typ==="mc") beantwortet=!!document.querySelector(`input[name=mcg${idx}]:checked`);
+  if(a.typ==="rf") beantwortet=a.items.some((_,i)=>!!document.querySelector(`input[name=rf${idx}_${i}]:checked`));
+  box.hidden=!beantwortet;
+  if(!beantwortet) $("bg"+idx).value="";
+}
+$("aufgaben").addEventListener("change", e=>{
+  if(!state.lzk || !state.lzk.interaktiv) return;
+  const karte=e.target.closest(".aufgabe"); if(!karte) return;
+  const idx=Number(karte.dataset.idx);
+  aktualisiereBegruendung(idx);
+  const feedback=$("sf"+idx); feedback.textContent=""; feedback.className="selbst-feedback";
+  updateLichtProgress();
+});
+$("btn-selbstcheck").addEventListener("click", ()=>{
+  if(!state.lzk || !state.lzk.interaktiv) return;
+  sammleAntworten();
+  let richtig=0;
+  state.aufgaben.forEach((a,idx)=>{
+    const r=checkTask(a), el=$("sf"+idx);
+    if(r.proz===100){ richtig++; el.textContent=a.begruendung?"Richtig! Antwort und Begründung passen.":"Richtig! Alle Auswahlen passen."; el.className="selbst-feedback ok"; }
+    else {
+      const einstieg=!lichtAufgabeFertig(a)?"Noch nicht vollständig. ":(r.proz>0?"Teilweise richtig. ":"Noch nicht richtig. ");
+      el.textContent=einstieg+"Hinweis: "+(a.hinweis||"Prüfe deine Auswahl noch einmal."); el.className="selbst-feedback hinweis";
+    }
+  });
+  updateLichtProgress();
+  showToast(`Selbstkontrolle: ${richtig} von ${state.aufgaben.length} Aufgaben vollständig richtig.`,4000);
+});
+$("btn-reset").addEventListener("click", ()=>{
+  if(!state.lzk || !state.lzk.interaktiv) return;
+  if(!window.confirm("Möchtest du wirklich alle Antworten dieser Übung zurücksetzen? Der Countdown läuft weiter.")) return;
+  state.aufgaben.forEach(a=>{ a.antworten={}; if(Object.prototype.hasOwnProperty.call(a,"antwort")) a.antwort=""; a.begruendungAntwort=""; });
+  renderAufgaben(); updateLichtProgress(); showToast("Alle Antworten wurden zurückgesetzt.");
+});
+
+
+function startCountdown(lzk){
+  const per=MIN_PRO_AUFGABE[lzk.fach]||5;
+  const reg=state.aufgaben.filter(a=>!a.fund).length;
+  const fb=FOERDER[state.name]||{};
+  state.zusaetzlich=(fb.extraMin||0)*60;
+  state.restSek=Math.round(per*reg*60)+state.zusaetzlich;
+  $("countbar").style.display="flex";
+  $("countdown").textContent="--:--";
+  $("foerder-hinweis").textContent=fb.extraMin?`( +${fb.extraMin} Min Förderbedarf )`:"";
+  state.timerId=setInterval(tickCountdown,1000);
+  tickCountdown();
+}
+function tickCountdown(){
+  const el=$("countdown");
+  const m=Math.floor(state.restSek/60), s=state.restSek%60;
+  el.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  el.className = state.restSek<=90?"warn-rot":state.restSek<=140?"warn-orange":state.restSek<=200?"warn-gelb":"";
+  if(state.restSek<=0){ clearInterval(state.timerId); abgeben(true); return; }
+  state.restSek--;
+}
+
+
+$("btn-abgeben").addEventListener("click", ()=>{
+  sammleAntworten();
+  const leer=state.aufgaben.filter(a=>{
+    if(a.typ==="text") return !(a.antwort||"").trim();
+    if(a.typ==="multi") return !Object.values(a.antworten||{}).some(v=>(v||"").trim());
+    if(a.typ==="bruch") return !(a.antwort && ((a.antwort.z||"").trim() || (a.antwort.n||"").trim()));
+    return !Object.keys(a.antworten||{}).length;
+  }).length;
+  $("abgabe-text").textContent = leer>0 ? `${leer} Aufgabe(n) wurden nicht bearbeitet. Möchtest du wirklich abgeben?` : "Alle Aufgaben wurden bearbeitet. Möchtest du abgeben?";
+  $("modal-abgabe").style.display="flex";
+});
+$("m-nicht").addEventListener("click", ()=>$("modal-abgabe").style.display="none");
+$("m-trotzdem").addEventListener("click", ()=>{ $("modal-abgabe").style.display="none"; abgeben(false); });
+function abgeben(auto){
+  if(!state.testLaeuft && !auto) return;
+  state.testLaeuft=false;
+  clearInterval(state.timerId);
+  $("countbar").style.display="none";
+  sammleAntworten();
+  const ergebnis=bewerten();
+  $("test").style.display="none";
+  zeigeErgebnis(ergebnis);
+  sessionStorage.setItem(SS_DONE, JSON.stringify({name:state.name,lzk:state.lzkName,zeit:new Date().toISOString()}));
+  if(!state.lehrer){ sendeAnGoogleSheets(ergebnis); }
+}
+
+
+function bewerten(){
+  let erreicht=0, max=0; const details=[];
+  state.aufgaben.forEach(a=>{
+    const r=checkTask(a);
+    const p=Math.round(a.punkte*r.proz)/100;
+    erreicht+=p; max+=a.punkte;
+    details.push({nr:a.nr, frage:stripHTML(a.frage).slice(0,220), typ:a.typ,
+      schuelerAntwort:antwortText(a), feedback:r.feedback, musterloesung:a.muster,
+      punkte:Math.round(p*10)/10, maxPunkte:a.punkte, farbe:farbeFuer(r.proz)});
+  });
+  erreicht=Math.round(erreicht*10)/10;
+  const prozent=Math.round(erreicht/max*1000)/10;
+  const uebung=/^(Übung|Testvorbereitung)/i.test(state.lzkName);
+  const fb=FOERDER[state.name]||{};
+  let note, vermerk=null, leFeedback=null;
+  const fehlerThemen=details.filter(d=>d.punkte<d.maxPunkte).map(d=>d.nr);
+  if(uebung){
+    note = prozent>=85?"Sehr gut gemacht – das Thema hast du sicher verstanden!":
+           prozent>=60?"Das hast du schon gut gemacht. Übe noch die Aufgaben, bei denen du Fehler hattest.":
+           prozent>=40?"Einiges hast du schon geschafft, aber da musst du noch üben. Schau dir dazu die Musterlösung an.":
+           "Da musst du noch üben. Bearbeite die Aufgaben mithilfe der Musterlösung noch einmal.";
+    if(fehlerThemen.length) note += " Das musst du noch üben: " + fehlerThemen.join(", ") + ".";
+    vermerk=note;
+  } else if(fb.le){
+    const themen=fehlerThemen.length?fehlerThemen.join(", "):"keine";
+    leFeedback = prozent>=85?"Sehr gute Leistung. Du beherrschst das Thema sicher. Weiter so!":
+      prozent>=60?`Das hast du gut gemacht. Übe noch einmal: ${themen}.`:
+      prozent>=40?`Du hast erste Grundlagen gezeigt. Übe noch einmal die folgenden Themen: ${themen}.`:
+      `Die Grundlagen sind noch nicht gesichert. Arbeite die folgenden Themen mit der Musterlösung noch einmal durch: ${themen}.`;
+    note="Rückmeldung";
+  } else {
+    note=tendenz(gradeFuer(state.kurs, prozent), prozent);
+  }
+  return {details, gesamtPunkte:erreicht, maxPunkte:max, prozent, note, vermerk, leFeedback};
+}
+function stripHTML(s){ const d=document.createElement("div"); d.innerHTML=s; return d.textContent||""; }
+function begruendungAntwortText(a){
+  if(!a.begruendung) return "";
+  const v=a.begruendungAntwort;
+  return "; Begründung: "+(v===undefined||v===""?"–":a.begruendung.options[Number(v)]);
+}
+function antwortText(a){
+  if(a.typ==="text") return a.antwort||"(keine Antwort)";
+  if(a.typ==="multi") return a.parts.map((pt,i)=>pt.label+": "+(a.antworten["p"+i]||"–")).join("; ");
+  if(a.typ==="rf") return a.items.map((it,i)=>{ const g=a.antworten["rf"+i]; const ja=a.jaNein; return it.q+" → "+(g==="r"?(ja?"Ja":"richtig"):g==="f"?(ja?"Nein":"falsch"):"–"); }).join("; ")+begruendungAntwortText(a);
+  if(a.typ==="mc") return a.options.map((o,i)=>a.antworten["mc"+i]!==undefined?"[x] "+o:"[ ] "+o).join("; ")+begruendungAntwortText(a);
+  if(a.typ==="luecke") return a.pairs.map((p,i)=>p.blank+": "+(a.antworten["l"+i]||"–")).join("; ");
+  if(a.typ==="bruch") return (a.antwort.z||"?")+"/"+(a.antwort.n||"?");
+  return "";
+}
+function formatPunkte(x){ const r=Math.round(x*10)/10; return Number.isInteger(r)?String(r):String(r).replace(".",","); }
+function begruendungAuswertungHtml(task){
+  if(!task.begruendung) return "";
+  const v=task.begruendungAntwort;
+  const ok=v!==undefined && v!=="" && Number(v)===task.begruendung.correct;
+  const gegeben=v===undefined||v===""?"—":task.begruendung.options[Number(v)];
+  const richtig=task.begruendung.options[task.begruendung.correct];
+  return `<p class="${ok?"aw-richtig":"aw-fehler"}"><b>Begründung:</b> ${gegeben} ${ok?"✓":"✗"+(ok?"":" (richtig: "+richtig+")")}</p>`;
+}
+function auswertungAntwortHtml(task, d){
+  if(!task) return `<p><b>Deine Antwort:</b> ${d.schuelerAntwort}</p>`;
+  if(task.typ==="mc"){
+    const rows=task.options.map((o,i)=>{
+      const ok=task.correct.includes(i);
+      const gew=task.antworten["mc"+i]!==undefined;
+      let cls="aw-neutral", mark="";
+      if(gew&&ok){ cls="aw-richtig"; mark="✓ richtig angekreuzt"; }
+      else if(gew&&!ok){ cls="aw-fehler"; mark="✗ falsch angekreuzt"; }
+      else if(!gew&&ok){ cls="aw-fehler"; mark="✗ fehlt (richtig)"; }
+      return `<tr><td>${o}</td><td class="${cls}">${mark}</td></tr>`;
+    }).join("");
+    return `<p style="font-weight:600;margin:6px 0 2px">Deine Antwort (im Format der Aufgabe):</p><table class="auswertung">${rows}</table>${begruendungAuswertungHtml(task)}`;
+  }
+  if(task.typ==="rf"){
+    const rows=task.items.map((it,i)=>{
+      const g=task.antworten["rf"+i];
+      const erwartet=it.correct?"richtig":"falsch";
+      let cls, text;
+      if(g===undefined){ cls="aw-fehler"; text="✗ fehlt (erwartet: "+erwartet+")"; }
+      else if((g==="r")===it.correct){ cls="aw-richtig"; text="✓ "+erwartet; }
+      else { cls="aw-fehler"; text="✗ deine Antwort: "+(g==="r"?"richtig":"falsch")+" (erwartet: "+erwartet+")"; }
+      return `<tr><td>${it.q}</td><td class="${cls}">${text}</td></tr>`;
+    }).join("");
+    return `<p style="font-weight:600;margin:6px 0 2px">Deine Antwort (im Format der Aufgabe):</p><table class="auswertung">${rows}</table>${begruendungAuswertungHtml(task)}`;
+  }
+  if(task.typ==="luecke"){
+    const rows=task.pairs.map((p,i)=>{
+      const g=(task.antworten["l"+i]||"").trim();
+      const ok=g && (g.toLowerCase()===p.answer.toLowerCase() || g.toLowerCase().includes(p.answer.toLowerCase()));
+      const cls=ok?"aw-richtig":"aw-fehler";
+      const shown=ok? g+" ✓" : (g? g+" ✗ (richtig: "+p.answer+")" : "— ✗ (richtig: "+p.answer+")");
+      return `<tr><td>${p.blank}</td><td class="${cls}">${shown}</td></tr>`;
+    }).join("");
+    return `<p style="font-weight:600;margin:6px 0 2px">Deine Antwort (Lückentext):</p><table class="auswertung">${rows}</table>`;
+  }
+  return `<p><b>Deine Antwort:</b> ${d.schuelerAntwort}</p>`;
+}
+function zeigeErgebnis(e){
+  const el=$("ergebnis");
+  const uebung=/^(Übung|Testvorbereitung)/i.test(state.lzkName);
+  const fb=FOERDER[state.name]||{};
+  let html=`<div class="ergebnis-sticky">
+    <h2 class="card-titel">Bewertungsübersicht</h2>
+    <p class="ergebnis-kopf"><b class="ergebnis-name">${state.name}</b>, ${state.fach}, ${state.klasse}(${state.kurs})</p>
+    <p class="ergebnis-kopf">${state.lzkName}</p>
+    <p class="ergebnis-kopf"><b>Punkte: ${formatPunkte(e.gesamtPunkte)} von ${formatPunkte(e.maxPunkte)}</b> / ${String(e.prozent).replace(".",",")} %${uebung?"":(fb.le?" / Rückmeldung":" / Note: "+e.note)}</p>`;
+  if(e.leFeedback) html+=`<p class="vermerk-text" style="margin-top:6px">${e.leFeedback}</p>`;
+  if(e.vermerk) html+=`<p class="vermerk-text" style="margin-top:6px">${e.vermerk}</p>`;
+  html+=`</div><p class="detail-head">Detailauswertung</p>`;
+  const kanon=[...e.details].sort((a,b)=>a.nr.localeCompare(b.nr,undefined,{numeric:true}));
+  kanon.forEach(d=>{
+    const task=state.aufgaben.find(x=>x.nr===d.nr);
+    const typisch=task && (task.typ==="mc"||task.typ==="rf"||task.typ==="luecke");
+    html+=`<div class="aufgabe ${d.farbe}" style="padding:12px;border-radius:14px;background:#fff">
+      <div class="head">${d.nr} <span class="punkte-angabe">(${formatPunkte(d.punkte)} von ${formatPunkte(d.maxPunkte)} Punkten)</span></div>
+      <div class="frage">${d.frage}</div>
+      ${auswertungAntwortHtml(task,d)}
+      <p><b>Feedback:</b> ${d.feedback}</p>
+      ${typisch?"":`<div class="fund-block"><b>Musterlösung:</b> ${d.musterloesung}</div>`}
+    </div>`;
+  });
+  html+=`<p class="hinweis-unten">Die Lernzielkontrolle ist abgeschlossen. Ein erneuter Durchlauf ist nicht möglich.</p>
+         <button class="ghost" onclick="window.print&&0">Ergebnis gespeichert</button>`;
+  el.innerHTML=html;
+  el.style.display="block";
+  window.scrollTo(0,0);
+}
+
+
+function baueDetailsArray(ergebnis){
+  return ergebnis.details.map(d=>{
+    const o={nr:d.nr, frage:d.frage, typ:d.typ, antwort:d.schuelerAntwort, feedback:d.feedback,
+      musterloesung:d.musterloesung, punkte:d.punkte, maxPunkte:d.maxPunkte, farbe:d.farbe};
+    const task=state.aufgaben.find(x=>x.nr===d.nr);
+    if(task){
+      if(task.typ==="mc"){ o.options=task.options; o.correct=task.correct; o.gewaehlt=task.options.map((_,i)=>i).filter(i=>task.antworten["mc"+i]!==undefined); }
+      else if(task.typ==="rf"){ o.items=task.items.map(it=>({q:it.q, correct:it.correct})); o.gegeben=task.items.map((_,i)=>task.antworten["rf"+i]||""); }
+      if(task.begruendung){ o.begruendungOptionen=task.begruendung.options; o.begruendungRichtig=task.begruendung.correct; o.begruendungGegeben=task.begruendungAntwort===""?null:Number(task.begruendungAntwort); }
+      else if(task.typ==="luecke"){ o.pairs=task.pairs.map(p=>({blank:p.blank, answer:p.answer})); o.gegeben=task.pairs.map((_,i)=>(task.antworten["l"+i]||"")); }
+    }
+    return o;
+  });
+}
+function sendeAnGoogleSheets(ergebnis){
+  if(!state.kurs) console.warn("Kein Kurs ermittelt -- Anmeldung unvollständig.");
+  const detailsArray = baueDetailsArray(ergebnis);
+  const params = new URLSearchParams();
+  params.append("zeitstempel", new Date().toISOString());
+  params.append("name", state.name);
+  params.append("fach", state.fach);
+  params.append("klasse", state.klasse);
+  params.append("kurs", state.kurs);
+  params.append("lzk", state.lzkName);
+  params.append("punkte", formatPunkte(ergebnis.gesamtPunkte)+" von "+formatPunkte(ergebnis.maxPunkte));
+  params.append("prozent", String(ergebnis.prozent).replace(".",","));
+  params.append("note", /^(Übung|Testvorbereitung)/i.test(state.lzkName) ? "Vermerk in PDF" : String(ergebnis.note));
+  params.append("vermerk", ergebnis.vermerk || ergebnis.leFeedback || "");
+  params.append("details", JSON.stringify(detailsArray));
+  params.append("pdfname", (state.name+"_"+state.lzkName+".pdf").replace(/\s+/g,"_"));
+  console.log("=== Sende an Google ===", GAS_URL);
+  showToast("Ergebnis wird gesendet …", 4000);
+  fetch(GAS_URL, {method:"POST", body:params, mode:"no-cors"})
+    .then(()=>{ console.log("Gesendet."); showToast("Ergebnis gespeichert.", 4000); })
+    .catch(err=>{ console.error("Fehler:",err); showToast("Ergebnis konnte NICHT gespeichert werden – Internetverbindung oder Script-URL prüfen.", 8000); });
+}
+
+function autoAbgabeBeacon(){
+  try{
+    sammleAntworten();
+    const ergebnis=bewerten();
+    const detailsArray = baueDetailsArray(ergebnis);
+    const params = new URLSearchParams();
+    params.append("zeitstempel", new Date().toISOString());
+    params.append("name", state.name);
+    params.append("fach", state.fach);
+    params.append("klasse", state.klasse);
+    params.append("kurs", state.kurs);
+    params.append("lzk", state.lzkName);
+    params.append("punkte", formatPunkte(ergebnis.gesamtPunkte)+" von "+formatPunkte(ergebnis.maxPunkte));
+    params.append("note", /^(Übung|Testvorbereitung)/i.test(state.lzkName) ? "Vermerk in PDF" : String(ergebnis.note));
+    params.append("vermerk", ergebnis.vermerk || ergebnis.leFeedback || "");
+    params.append("details", JSON.stringify(detailsArray));
+    params.append("pdfname", (state.name+"_"+state.lzkName+".pdf").replace(/\s+/g,"_"));
+    navigator.sendBeacon(GAS_URL, new Blob([params.toString()], {type:"application/x-www-form-urlencoded"}));
+    sessionStorage.setItem(SS_DONE, JSON.stringify({name:state.name,lzk:state.lzkName,zeit:new Date().toISOString()}));
+  }catch(err){ console.error("Auto-Abgabe Fehler:", err); }
+}
+window.addEventListener("beforeunload", (e)=>{ if(state.testLaeuft && !state.lehrer){ autoAbgabeBeacon(); e.preventDefault(); e.returnValue="Achtung: Wenn du das Fenster jetzt schließt, wird deine schriftliche Arbeit automatisch abgegeben."; } });
+document.addEventListener("copy", e=>{ if(state.testLaeuft){ e.preventDefault(); showToast("Während der schriftlichen Arbeit ist das Kopieren der Aufgaben nicht erlaubt!"); }});
+document.addEventListener("cut", e=>{ if(state.testLaeuft){ e.preventDefault(); showToast("Während der schriftlichen Arbeit ist das Kopieren der Aufgaben nicht erlaubt!"); }});
+document.addEventListener("contextmenu", e=>{ if(state.testLaeuft){ e.preventDefault(); showToast("Während der schriftlichen Arbeit ist das Kopieren der Aufgaben nicht erlaubt!"); }});
+document.addEventListener("dragstart", e=>{ if(state.testLaeuft){ e.preventDefault(); }});
+document.addEventListener("keydown", e=>{
+  if(!state.testLaeuft) return;
+  if((e.ctrlKey||e.metaKey) && ["c","x","p","s"].includes(e.key.toLowerCase())){
+    if(e.target && (e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA") && e.key.toLowerCase()==="c") return;
+    e.preventDefault(); showToast("Während der schriftlichen Arbeit ist das Kopieren der Aufgaben nicht erlaubt!");
+  }
+});
+
+
+window.addEventListener("error", (ev)=>{ showToast("Fehler: "+ev.message, 6000); });
+$("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") pwPruefen(); });
+$("pw").addEventListener("input", ()=>{ $("pw").classList.toggle("input-attention",!$("pw").value.trim()); });
+$("pw").addEventListener("blur", ()=>pwPruefen());
+$("btn-start").addEventListener("mouseover", updateStart);
+(function init(){
+  $("version-stand").textContent=VERSION_STAND;
+  const done=sessionStorage.getItem(SS_DONE);
+  if(done){
+    const d=JSON.parse(done);
+    $("login").innerHTML=`<h2 class="card-titel">Lernzielkontrolle abgeschlossen</h2>
+      <p>Die Lernzielkontrolle ist abgeschlossen. Ein erneuter Durchlauf ist nicht möglich.</p>
+      <p class="hinweis-unten">${d.name} – ${d.lzk} – ${new Date(d.zeit).toLocaleString("de-DE")}</p>`;
+    return;
+  }
+  lockCheck();
+})();
+</script>
+</body>
+
+
+</html>
